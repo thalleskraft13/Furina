@@ -1,0 +1,49 @@
+const fs = require('fs');
+const chalk = require('colors');
+
+const { PermissionsBitField } = require('discord.js');
+const { Routes } = require('discord-api-types/v10');
+const { REST } = require('@discordjs/rest')
+
+const TOKEN = process.env.token;
+const CLIENT_ID = "1314904179680219136";
+
+const rest = new REST({ version: '10' }).setToken(TOKEN);
+
+module.exports = (client) => {
+  const slashCommands = [];
+
+  fs.readdirSync('./Comandos/').forEach(async dir => {
+    const files = fs.readdirSync(`./Comandos/${dir}/`).filter(file => file.endsWith('.js'));
+
+    for (const file of files) {
+      const slashCommand = require(`../Comandos/${dir}/${file}`);
+      slashCommands.push({
+        name: slashCommand.name,
+        description: slashCommand.description,
+        type: slashCommand.type,
+        options: slashCommand.options ? slashCommand.options : null,
+        default_permission: slashCommand.default_permission ? slashCommand.default_permission : null,
+        default_member_permissions: slashCommand.default_member_permissions ? PermissionsBitField.resolve(slashCommand.default_member_permissions).toString() : null
+      });
+
+      if (slashCommand.name) {
+     //   console.log(slashCommand.name, "\n", slashCommand)
+        client.commands.set(slashCommand.name, slashCommand)
+      }
+    }
+  });
+
+  (async () => {
+    try {
+
+      await rest.put(
+        Routes.applicationCommands(CLIENT_ID),
+        { body: slashCommands }
+      )
+      
+    } catch (error) {
+      console.error(error);
+    }
+  })();
+};
