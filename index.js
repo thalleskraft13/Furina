@@ -2,6 +2,7 @@ const { Client, Collection, GatewayIntentBits, Partials } = require("discord.js"
 const fs = require("fs");
 require("dotenv").config();
 const RankAventureiro = require("./class/RankAventureiro.js")
+const Banner = require("./class/Banner.js")
 
 const Furina = new Client({
   partials: [
@@ -39,6 +40,7 @@ Furina.events = new Collection();
 Furina.userdb = require("./mongodb/user.js")
 Furina.RankAventureiro = new RankAventureiro(Furina);
 Furina.bannerAtual = "1.0"
+Furina.Banner = new Banner(Furina);
 module.exports = Furina;
 
 Furina.categories =  fs.readdirSync("./Comandos");

@@ -1,3 +1,5 @@
+const { TextDisplayBuilder, ContainerBuilder } = require("discord.js");
+
 class RankAventureiro {
   constructor(client) {
     this.client = client;
@@ -43,12 +45,13 @@ class RankAventureiro {
         new ContainerBuilder()
             .setAccentColor(2046807)
             .addTextDisplayComponents(
-                new TextDisplayBuilder().setContent("**Oh là là! Um espetáculo digno dos aplausos mais estrondosos! **\n\nVocê subiu de Rank de Aventureiro! Agora ostenta o glorioso AR ${userdb.level.ar}, com nada menos que ${userdb.level.xp} pontos de experiência pulsando em suas veias!\nComo recompensa por tão magnífico progresso, receba 160 Primogemas e 20.000 Mora!\n\n**O palco da aventura o aguarda — e que comece o segundo ato!**"),
+                new TextDisplayBuilder().setContent(`**Oh là là! Um espetáculo digno dos aplausos mais estrondosos! **\n\nVocê subiu de Rank de Aventureiro! Agora ostenta o glorioso AR ${userdb.level.ar}, com nada menos que ${userdb.level.xp} pontos de experiência pulsando em suas veias!\nComo recompensa por tão magnífico progresso, receba 160 Primogemas e 20.000 Mora!\n\n**O palco da aventura o aguarda — e que comece o segundo ato!**`),
             ),
 ];
 
-      client.users.cache.get(user).send({
-        components: components
+      this.client.users.cache.get(user).send({
+        components: components,
+        flags: 32768
       })
       
       await userdb.save()
