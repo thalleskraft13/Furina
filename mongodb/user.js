@@ -7,6 +7,7 @@ const personagemSchema = new Schema({
 
 module.exports = model("Usuários", new Schema({
   id: { type: String, required: true },
+  uid: { type: String, default: "0" },
   primogemas: { type: Number, default: 0 },
   mora: { type: Number, default: 0 },
 
