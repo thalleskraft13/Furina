@@ -9,7 +9,12 @@ Furina.on("messageCreate", async(message) => {
 
   await Furina.RankAventureiro.addXp(message.author.id, 5);
 
-  if(!message.content.startsWith(prefix)) return; 
+    if (message.content === `<@${Furina.user.id}>` || message.content === `<@!${Furina.user.id}>`){
+        await message.reply({
+            content: "Oh, uma menção? Furina está aqui, pronta para guiar tua aventura!\nUse `/ajuda` para descobrir meus poderes!"
+        })
+    } else {
+        if(!message.content.startsWith(prefix)) return; 
   const args = message.content.slice(prefix.length).trim().split(/ +/g); 
 	const cmd = args.shift().toLowerCase();
 	if(cmd.length === 0) return;
@@ -115,5 +120,5 @@ Furina.on("messageCreate", async(message) => {
       components: components
     })
   }
-  
+    }
 })

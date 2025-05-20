@@ -40,7 +40,8 @@ module.exports = model("Usuários", new Schema({
         bausComuns: { type: Number, default: 0 },
         bausLuxuosos: { type: Number, default: 0 },
         time: { type: Number, default: 0 },
-        resgatado: { type: Boolean, default: true }
+        resgatado: { type: Boolean, default: true },
+        resgatar: { type: Boolean, default: false }
       },
 
       estatuaDosSetes: {

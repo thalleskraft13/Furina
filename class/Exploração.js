@@ -1,4 +1,4 @@
-class Exploração {
+class Exploracao {
   constructor(Furina) {
     this.furina = Furina;
   }
@@ -48,7 +48,7 @@ Ainda restam ${tempoFormatado} para terminar sua exploração atual. Use \`/expl
 
     const duracaoMs = timeHours * 3600000;
     userdb.regioes.mondstadt.exploracao.time = agora + duracaoMs;
-    userdb.regioes.mondstadt.exploracao.resgatar = false;
+    userdb.regioes.mondstadt.exploracao.resgatar = true;
 
     await userdb.save();
 
@@ -71,7 +71,38 @@ Volte mais tarde para resgatar seus tesouros com \`/explorar mondstadt coletar\`
         return "Você não está explorando no momento. Use `/explorar mondstadt iniciar` para começar sua jornada!";
       }
 
-      return "Você já coletou suas recompensas, aventureiro. Explore novamente para mais tesouros!";
+      // Coletar recompensas
+      let comuns = 0, preciosos = 0, luxuosos = 0;
+
+      const tempoDuracao = (exploracao.time - (agora - 10 * 60 * 60 * 1000)) / (60 * 60 * 1000);
+
+      if (tempoDuracao >= 10) {
+        comuns = 12; preciosos = 5; luxuosos = 2;
+      } else if (tempoDuracao >= 5) {
+        comuns = 6; preciosos = 3; luxuosos = 1;
+      } else {
+        comuns = 3; preciosos = 1; luxuosos = 0;
+      }
+
+      const primogemas = comuns * 2 + preciosos * 5 + luxuosos * 10;
+
+      userdb.regioes.mondstadt.exploracao.bausComuns += comuns;
+      userdb.regioes.mondstadt.exploracao.bausPreciosos += preciosos;
+      userdb.regioes.mondstadt.exploracao.bausLuxuosos += luxuosos;
+      userdb.regioes.mondstadt.exploracao.time = 0;
+      userdb.regioes.mondstadt.exploracao.resgatar = false;
+      userdb.primogemas += primogemas;
+
+      await userdb.save();
+
+      return `Ah, retornaste sob aplausos invisíveis!  
+Tesouros encontrados:  
+> Baús Comuns: ${comuns}  
+> Preciosos: ${preciosos}  
+> Luxuosos: ${luxuosos}  
+
+Primogemas arrecadadas: **${primogemas}**  
+Que tua sorte continue a dançar contigo!`;
     } else {
       const restanteMs = exploracao.time - agora;
       const tempoFormatado = this.formatarTempo(restanteMs);
@@ -81,4 +112,4 @@ Faltam ${tempoFormatado} para concluir a jornada. Tenha paciência e aguarde os 
   }
 }
 
-module.exports = Exploração;
+module.exports = Exploracao;
