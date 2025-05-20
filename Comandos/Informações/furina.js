@@ -16,9 +16,19 @@ module.exports = {
     name: "informações",
     description: "Permita-me revelar os gloriosos detalhes sobre mim!",
       type: 1
+  },{
+    name: "ping",
+    description: "Ah, quanta ansiedade! Permita-me revelar, com toda a pompa e circunstância, a minha latência atual!",
+    type: 1
   }],
 
   run: async(furina, interaction) => {
+
+    if (interaction.options.getSubcommand() === "ping"){
+      return await interaction.editReply({
+        content: `Pong! ${furina.ws.ping}ms`
+      })
+    }
     if (interaction.options.getSubcommand() === "informações"){
 
       await interaction.editReply({

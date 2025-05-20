@@ -3,6 +3,7 @@ const fs = require("fs");
 require("dotenv").config();
 const RankAventureiro = require("./class/RankAventureiro.js")
 const Banner = require("./class/Banner.js")
+const Exploração = require("./class/Exploração.js");
 
 const Furina = new Client({
   partials: [
@@ -41,6 +42,7 @@ Furina.userdb = require("./mongodb/user.js")
 Furina.RankAventureiro = new RankAventureiro(Furina);
 Furina.bannerAtual = "1.0"
 Furina.Banner = new Banner(Furina);
+Furina.exploracao = new Exploração(Furina);
 module.exports = Furina;
 
 Furina.categories =  fs.readdirSync("./Comandos");

@@ -10,6 +10,7 @@ module.exports = model("Usuários", new Schema({
   uid: { type: String, default: "0" },
   primogemas: { type: Number, default: 0 },
   mora: { type: Number, default: 0 },
+  codigos: { type: Array, default: [] },
 
   level: {
     ar: { type: Number, default: 1 },
@@ -25,5 +26,30 @@ module.exports = model("Usuários", new Schema({
     }
   },
 
-  personagens: { type: [personagemSchema], default: [] }
+  personagens: { type: [personagemSchema], default: []},
+//userdb.regioes.mondstadt.exploracao.bausPreciosos + userdb.regioes.mondstadt.exploracao.bausComuns + userdb.regioes.mondstadt.exploracao.time
+  regioes: {
+    mondstadt: {
+      reputacao: {
+        nv: { type: Number, default: 0 },
+        xp: { type: Number, default: 0 },
+      },
+
+      exploracao: {
+        bausPreciosos: { type: Number, default: 0 },
+        bausComuns: { type: Number, default: 0 },
+        bausLuxuosos: { type: Number, default: 0 },
+        time: { type: Number, default: 0 },
+        resgatado: { type: Boolean, default: true }
+      },
+
+      estatuaDosSetes: {
+        nv: { type: Number, default: 0 },
+        quantidade: { type: Number, default: 0 },
+        anemoculus: { type: Number, default: 0 },
+      }
+    }
+  }
+
+
 }));
