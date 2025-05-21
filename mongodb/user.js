@@ -10,6 +10,7 @@ module.exports = model("Usuários", new Schema({
   uid: { type: String, default: "0" },
   primogemas: { type: Number, default: 0 },
   mora: { type: Number, default: 0 },
+  daily: { type: Number, default: 0 },
   codigos: { type: Array, default: [] },
 
   level: {
