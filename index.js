@@ -38,7 +38,9 @@ const Furina = new Client({
 
 Furina.commands = new Collection();
 Furina.events = new Collection();
-Furina.userdb = require("./mongodb/user.js")
+Furina.userdb = require("./mongodb/user.js");
+Furina.serverdb = require("./mongodb/servidores.js");
+Furina.website = "https://da07d96c-8590-4413-a849-bb1281736a24-00-3gfv369vb95l6.picard.replit.dev:3002";
 Furina.RankAventureiro = new RankAventureiro(Furina);
 Furina.bannerAtual = "1.0"
 Furina.Banner = new Banner(Furina);

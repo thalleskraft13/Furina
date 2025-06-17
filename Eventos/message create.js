@@ -1,5 +1,5 @@
 const Furina = require("../index.js");
-const { EmbedBuilder, AttachmentBuilder, TextDisplayBuilder, ThumbnailBuilder, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, ButtonBuilder, ButtonStyle, MediaGalleryBuilder, MediaGalleryItemBuilder, ContainerBuilder } = require("discord.js");
+const { EmbedBuilder, AttachmentBuilder, TextDisplayBuilder, ThumbnailBuilder, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, ButtonBuilder, ButtonStyle, MediaGalleryBuilder, MediaGalleryItemBuilder, ContainerBuilder, ActionRowBuilder} = require("discord.js");
 
 let mods = ["890320875142930462"];
 let prefix = "g!";
@@ -11,7 +11,14 @@ Furina.on("messageCreate", async(message) => {
 
     if (message.content === `<@${Furina.user.id}>` || message.content === `<@!${Furina.user.id}>`){
         await message.reply({
-            content: "Oh, uma menção? Furina está aqui, pronta para guiar tua aventura!\nUse `/ajuda` para descobrir meus poderes!"
+            content: "🎭 Oh~ Você ousou mencionar a grandiosa Furina? Excelente escolha! Explore todo o meu esplendor no meu site de comandos!",
+            components: [new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                            .setLabel("Website")
+                            .setURL(Furina.website + "/comandos")
+                            .setStyle(ButtonStyle.Link)
+                        )]
         })
     } else {
         if(!message.content.startsWith(prefix)) return; 
