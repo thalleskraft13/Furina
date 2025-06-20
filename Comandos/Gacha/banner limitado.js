@@ -1,4 +1,4 @@
-
+const { ActionRowBuilder, ButtonBuilder,  ButtonStyle, ModalBuilder, TextInputBuilder, ComponentType, TextInputStyle, TextDisplayBuilder, ThumbnailBuilder, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, ContainerBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder } = require("discord.js");
 
 const Discord = require("discord.js");
 const ms = require("ms")
@@ -24,6 +24,14 @@ if (!userdb){
   id: interaction.user.id 
 })
 }
+
+  if (userdb.uid === "0"){
+
+       let msg = await interaction.editReply({
+        content: `Ah, meu caro! Vejo que ainda não há um UID gravado em seus registros. Salve-o agora para que a magia possa prosseguir!`,
+        components: [new ActionRowBuilder().addComponents(new ButtonBuilder().setLabel("Enviar Uid").setCustomId("enviar-uid-"+interaction.user.id).setStyle(ButtonStyle.Secondary))]
+      })
+  } else {
 
 const file = new Discord.AttachmentBuilder('./img/banners/' + Furina.bannerAtual + ".jpeg");
 
@@ -58,7 +66,32 @@ const collector = responss.createMessageComponentCollector({ componentType: Disc
 
 
 collector.on('collect', async(i) => {
-if (i.customId === `giros_10_${interaction.id}`){
+  if (i.customId ==! "enviar-uid-"+interaction.user.id) {
+        const modal = new ModalBuilder()
+			.setCustomId('uid')
+			.setTitle('Envio de UID a Verificação')
+
+        let op_1 = new ActionRowBuilder()
+        .addComponents(
+          new TextInputBuilder()
+		       	.setCustomId('1')
+		        .setLabel("Digite seu nome no Genshin Impact")
+		         .setStyle(TextInputStyle.Short)
+        )
+
+        let op_2 = new ActionRowBuilder()
+        .addComponents(
+          new TextInputBuilder()
+		       	.setCustomId('2')
+		        .setLabel("Digite seu Uid no Genshin Impact")
+		         .setStyle(TextInputStyle.Short)
+        )
+
+        modal.addComponents(op_1, op_2);
+        await i.showModal(modal)
+        
+      
+    }  else if (i.customId === `giros_10_${interaction.id}`){
 await i.deferUpdate();
 
 
@@ -165,10 +198,10 @@ setTimeout(async() => {
     });
 
     setTimeout(async () => {
-      await i.editReply(data);
+      await i.editReply({embeds: [data], files: []});
     }, 5000);
   }
 
-});
+})}
 }
 }
