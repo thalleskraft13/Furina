@@ -45,16 +45,21 @@ class RankAventureiro {
         new ContainerBuilder()
             .setAccentColor(2046807)
             .addTextDisplayComponents(
-                new TextDisplayBuilder().setContent(`**Oh là là! Um espetáculo digno dos aplausos mais estrondosos! **\n\nVocê subiu de Rank de Aventureiro! Agora ostenta o glorioso AR ${userdb.level.ar}, com nada menos que ${userdb.level.xp} pontos de experiência pulsando em suas veias!\nComo recompensa por tão magnífico progresso, receba 160 Primogemas e 20.000 Mora!\n\n**O palco da aventura o aguarda — e que comece o segundo ato!**`),
+                new TextDisplayBuilder().setContent(`**Oh là là! Um espetáculo digno dos aplausos mais estrondosos!** 🎭✨\n\nVocê subiu de Rank de Aventureiro! Agora ostenta o glorioso AR ${userdb.level.ar}, com nada menos que ${userdb.level.xp} pontos de experiência pulsando em suas veias! 💫\nComo recompensa por tão magnífico progresso, receba **160 Primogemas** 💎 e **20.000 Mora** 💰!\n\n**O palco da aventura o aguarda — e que comece o segundo ato!** 🎬🌟\n\n📩 *Ah, e caso deseje silenciar os mensageiros dos céus e encerrar essas doces notificações por DM...*\nUse o comando **/notificação desativar** e deixe o silêncio cair como a cortina no fim do espetáculo. 🎼🎭`
+),
             ),
 ];
 
-      this.client.users.cache.get(user).send({
+      
+      
+      await userdb.save()
+
+      if (userdb.notificar){
+        this.client.users.cache.get(user).send({
         components: components,
         flags: 32768
       })
-      
-      await userdb.save()
+      }
     } else {
       await userdb.save();
     }
