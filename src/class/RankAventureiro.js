@@ -55,10 +55,14 @@ class RankAventureiro {
       await userdb.save()
 
       if (userdb.notificar){
+        try {
         this.client.users.cache.get(user).send({
         components: components,
         flags: 32768
       })
+        } catch (e) {
+          console.log(e)
+        }
       }
     } else {
       await userdb.save();

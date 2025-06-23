@@ -1,3 +1,4 @@
+// Banner.js
 class Banner {
   constructor(client) {
     this.client = client;
@@ -7,6 +8,23 @@ class Banner {
     this.t4 = ["Charlotte", "Chongyun", "Mika"];
     this.t5_mochileiro = ["Mona", "Diluc", "Qiqi", "Jean", "Keqing"];
     this.t4_mochileiro = ["Noelle", "Barbara"];
+
+    this.personagensElementos = {
+      Furina: "Hydro",
+
+      Mona: "Hydro",
+      Diluc: "Pyro",
+      Qiqi: "Cryo",
+      Jean: "Anemo",
+      Keqing: "Electro",
+
+      Charlotte: "Cryo",
+      Chongyun: "Cryo",
+      Mika: "Electro",
+
+      Noelle: "Geo",
+      Barbara: "Hydro",
+    };
   }
 
   async push(pity, userId, value) {
@@ -23,13 +41,21 @@ class Banner {
         id: userId,
         gacha: { pity: {} },
         personagens: [],
-        primogemas: 0
+        primogemas: 0,
+        premium: 0
       });
     }
 
-    // Remover primogemas com base na quantidade de tiros
+    // Verificar se premium ainda está ativo
+    const agora = Date.now();
+    const isPremium = userdb.premium && userdb.premium > agora;
+
+    // Custo
     const custo = value * 160;
     userdb.primogemas -= custo;
+
+    // Define pity máximo (60 para premium, 90 para normal)
+    const maxPity = isPremium ? 60 : 90;
 
     for (let i = 0; i < value; i++) {
       pity.five++;
@@ -39,9 +65,9 @@ class Banner {
       let got = null;
 
       let chance5 = 0.6;
-      if (pity.five >= 75) chance5 += (pity.five - 74) * 6;
+      if (pity.five >= maxPity - 15) chance5 += (pity.five - (maxPity - 15) + 1) * 6;
 
-      if (pity.five >= 90 || sorteio < chance5) {
+      if (pity.five >= maxPity || sorteio < chance5) {
         pity.five = 0;
 
         if (pity.garantia5 || Math.random() < 0.5) {
@@ -53,6 +79,21 @@ class Banner {
         }
 
         resultado.push({ raridade: 5, personagem: got });
+
+        // Se for premium, chance de 50% de vir 2 5★ no mesmo pull
+        if (isPremium && Math.random() < 0.5 && i + 1 < value) {
+          let got2 = null;
+          if (pity.garantia5 || Math.random() < 0.5) {
+            got2 = this.t5;
+            pity.garantia5 = false;
+          } else {
+            got2 = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
+            pity.garantia5 = true;
+          }
+          resultado.push({ raridade: 5, personagem: got2 });
+          i++; // conta esse segundo tiro também
+        }
+
         continue;
       }
 
@@ -86,8 +127,39 @@ class Banner {
       if (personagem === "Arma 3★") return;
 
       const pIndex = userdb.personagens.findIndex(p => p.nome === personagem);
+      const elemento = this.personagensElementos[personagem] || "Anemo";
+
       if (pIndex === -1) {
-        userdb.personagens.push({ nome: personagem, c: 0 });
+        userdb.personagens.push({
+          nome: personagem,
+          c: 0,
+          level: 0,
+          ascensao: 0,
+          xp: 0,
+          atributos: {
+            hp: 1000,
+            atk: 100,
+            def: 50,
+            recargaEnergia: 100,
+            taxaCritica: 5,
+            danoCritico: 50,
+            bonusPyro: 0,
+            bonusHydro: 0,
+            bonusElectro: 0,
+            bonusCryo: 0,
+            bonusAnemo: 0,
+            bonusGeo: 0,
+            bonusDendro: 0,
+            bonusFisico: 0,
+          },
+          elemento: elemento,
+          talentos: {
+            ataqueNormal: 1,
+            ataqueCarga: 1,
+            habilidadeElemental: 1,
+            supremo: 1
+          }
+        });
       } else {
         userdb.personagens[pIndex].c++;
       }

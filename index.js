@@ -1,59 +1,12 @@
-const { Client, Collection, GatewayIntentBits, Partials } = require("discord.js");
-const fs = require("fs");
-require("dotenv").config();
-const RankAventureiro = require("./class/RankAventureiro.js")
-const Banner = require("./class/Banner.js")
-const Exploração = require("./class/Exploração.js");
+require("./src/furinaDoDiscord.js")
 
-const Furina = new Client({
-  partials: [
-    Partials.Message,
-    Partials.Channel,
-    Partials.GuildMember,
-    Partials.Reaction,
-    Partials.GuildScheduledEvent,
-    Partials.User,
-    Partials.ThreadMember,
-  ],
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildBans,
-    GatewayIntentBits.GuildEmojisAndStickers,
-    GatewayIntentBits.GuildIntegrations,
-    GatewayIntentBits.GuildWebhooks,
-    GatewayIntentBits.GuildInvites,
-    GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.GuildPresences,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.GuildMessageReactions,
-    GatewayIntentBits.GuildMessageTyping,
-    GatewayIntentBits.DirectMessages,
-    GatewayIntentBits.DirectMessageReactions,
-    GatewayIntentBits.DirectMessageTyping,
-  ],
+const express = require("express");
+const app = express();
+
+app.get("/", (req, res) => {
+  res.send("Bot está vivo!");
 });
 
-
-Furina.commands = new Collection();
-Furina.events = new Collection();
-Furina.userdb = require("./mongodb/user.js");
-Furina.serverdb = require("./mongodb/servidores.js");
-Furina.MsgAuto = require("./mongodb/msg.js")
-Furina.website = "https://furina-do-discord.onrender.com";
-Furina.RankAventureiro = new RankAventureiro(Furina);
-Furina.bannerAtual = "1.0"
-Furina.Banner = new Banner(Furina);
-Furina.exploracao = new Exploração(Furina);
-module.exports = Furina;
-
-Furina.categories =  fs.readdirSync("./Comandos");
-
-
-["event_handler", "slash_handler"].forEach((handler) => {
-  require(`./handlers/${handler}`)(Furina);
+app.listen(3000, () => {
+  console.log("Servidor keep-alive ativo na porta 3000");
 });
-
-
-Furina.login(process.env.token);

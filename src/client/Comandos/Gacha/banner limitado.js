@@ -65,7 +65,7 @@ await i.showModal(modal);
 }
 
 const bannerURL = `attachment://${Furina.bannerAtual}.jpeg`;
-const file = new AttachmentBuilder(`./img/banners/${Furina.bannerAtual}.jpeg`);
+const file = new AttachmentBuilder(`./src/img/banners/${Furina.bannerAtual}.jpeg`);
 const embed = new EmbedBuilder()
 .setTitle("**O palco estrelado desta temporada!**")
 .setImage(bannerURL)
@@ -119,7 +119,7 @@ new EmbedBuilder()
 .setImage(`attachment://${personagem}.png`)
 ],
 content: `${interaction.user}`,
-files: [new AttachmentBuilder(`./img/banners/personagens/${personagem}.png`)]
+files: [new AttachmentBuilder(`./src/img/banners/personagens/${personagem}.png`)]
 });
 }, 7000);
 }
@@ -148,7 +148,7 @@ const embed = new EmbedBuilder()
 
 await i.editReply({
 embeds: [embed],
-files: res.raridade < 4 ? [] : [new AttachmentBuilder(`./img/banners/personagens/${res.personagem}.png`)]
+files: res.raridade < 4 ? [] : [new AttachmentBuilder(`./src/img/banners/personagens/${res.personagem}.png`)]
 });
 }, 5000);
 }

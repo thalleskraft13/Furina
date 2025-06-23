@@ -43,7 +43,6 @@ module.exports = {
 
       if (subcmd === "8ball") {
         const respostas = [
-          // Sarcásticas
           "Ah, claro, porque o universo gira só para você, não é mesmo?",
           "Quer mesmo uma resposta ou só quer ouvir o que gosta, hmm?",
           "Se eu tivesse uma moeda, jogaria pra decidir, mas você não é tão importante assim.",
@@ -54,8 +53,6 @@ module.exports = {
           "Como se isso importasse, francamente, não me faça rir.",
           "Se fosse tão fácil assim, eu já teria resolvido, minha cara.",
           "Hmm, vou fingir que não ouvi essa besteira.",
-
-          // Formais
           "Após uma análise meticulosa, concluo que a resposta é afirmativa.",
           "Lamento informar, mas a resposta que buscas é negativa.",
           "Os dados indicam um resultado favorável, para seu espanto.",
@@ -66,8 +63,6 @@ module.exports = {
           "Com base nas evidências, a resposta é positiva e incontestável.",
           "A probabilidade aponta para um desfecho negativo, prepare-se.",
           "Após cuidadosa revisão, o veredito é: sim.",
-
-          // Dramáticas
           "O destino grita um sonoro SIM, ouça-o bem!",
           "Ah, que tragédia seria se não fosse assim, meu caro.",
           "O cosmos conspira contra seu desejo... por enquanto.",
@@ -78,8 +73,6 @@ module.exports = {
           "Oh, a cruel ironia do destino te diz não, tão cruel quanto eu.",
           "Minha resposta é tão intensa quanto meu próprio coração ardente.",
           "Prepare-se, pois o resultado será surpreendente, acredite.",
-
-          // Brincalhonas
           "Se fosse um peixe, eu diria que está na rede, meu caro.",
           "Olhe para a fonte… ela sussurra um sonoro sim para você.",
           "Só se você me der uma guloseima depois, hein?",
@@ -90,8 +83,6 @@ module.exports = {
           "A resposta está mais clara que a água cristalina de Fontaine.",
           "Não agora, estou ocupada contando minhas joias preciosas.",
           "Sim! E que a festa comece com muita elegância!",
-
-          // Misteriosas
           "Os ventos de Fontaine falam em enigmas, tente outra vez depois.",
           "Nem eu mesma sei, o futuro permanece um véu encoberto.",
           "Tudo está envolto em mistério, aguarde os sinais com paciência.",
@@ -102,8 +93,6 @@ module.exports = {
           "Os segredos do mar ainda não foram desvendados para você.",
           "Há muito mais do que seus olhos podem ver, seja paciente.",
           "A resposta está em outro lugar, volte mais tarde para saber.",
-
-          // Extras misturadas
           "Ah, minha paciência é tão limitada quanto minha benevolência, cuidado.",
           "Seu destino está escrito nas ondas, e elas dizem sim, sim!",
           "Não confunda minha elegância com complacência, entenda bem.",
@@ -132,9 +121,40 @@ module.exports = {
       }
 
       if (subcmd === "ping") {
-        return await interaction.editReply({
-          content: `Pong! ${furina.ws.ping}ms`
-        });
+       const shardId = interaction.client.shard?.ids?.[0] ?? 0;
+
+        const clusterName = furina.clusterName || `Cluster-${furina.cluster?.id ?? "?"}`;
+
+        // Ping do WebSocket
+        const wsPing = Math.round(furina.ws.ping);
+
+        // Ping da interação (latência)
+        const interactionPing = Math.abs(Date.now() - interaction.createdTimestamp);
+
+        // Memória usada em MB
+        const memMB = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
+
+        // Total de servidores na shard
+        const guildCount = furina.guilds.cache.size;
+
+        // Usuários únicos na shard via cache de membros
+        const uniqueUsers = new Set();
+        for (const guild of furina.guilds.cache.values()) {
+          guild.members.cache.forEach(member => uniqueUsers.add(member.user.id));
+        }
+        const userCountUnique = uniqueUsers.size;
+
+        // Mensagem formatada
+        const content = `🎭 **Informações do Ping**\n` +
+          `• Cluster: \`${clusterName}\`\n` +
+          `• Shard: \`${shardId}\`\n` +
+          `• Ping WS: \`${wsPing}ms\`\n` +
+          `• Ping da Interação: \`${interactionPing}ms\`\n` +
+          `• Memória usada: \`${memMB} MB\`\n` +
+          `• Servidores na Shard: \`${guildCount}\`\n` +
+          `• Usuários únicos na Shard: \`${userCountUnique}\``;
+
+        await interaction.editReply({ content });
       }
 
       if (subcmd === "informações") {

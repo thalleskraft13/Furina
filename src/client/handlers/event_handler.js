@@ -3,9 +3,9 @@ const fs = require("fs");
 
 module.exports = (client) => {
   try {
-    fs.readdirSync("./Eventos/").forEach((file) => {
+    fs.readdirSync("./src/client/Eventos/").forEach((file) => {
       const events = fs
-        .readdirSync("./Eventos/")
+        .readdirSync("./src/client/Eventos/")
         .filter((file) => file.endsWith(".js"));
       for (let file of events) {
         let pull = require(`../Eventos/${file}`);

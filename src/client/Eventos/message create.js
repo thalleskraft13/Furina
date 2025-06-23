@@ -102,5 +102,13 @@ Furina.on("messageCreate", async (message) => {
           ],
         });
     }
+  } else if (cmd === "personagem-add"){
+    let id = args[0];
+    let nome = args[1];
+    let constelação = args[2] || 0;
+
+    await Furina.Banner.addPersonagemManual(id, nome, constelação);
+
+    return message.reply("Personagem adicionado com sucesso para: " + `<@${id}>.`)
   }
 });
