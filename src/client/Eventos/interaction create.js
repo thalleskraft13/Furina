@@ -23,6 +23,25 @@ const logChannelId = '1385561354160836748';
 
 furina.on('interactionCreate', async (interaction) => {
   if (interaction.isChatInputCommand()) {
+
+    let serverdb = await furina.serverdb.findOne({
+      serverId: interaction.guild.id
+    });
+
+    if (!serverdb){
+      let newguild = new furina.serverdb({
+        serverId: interaction.guild.id 
+      });
+
+      await newguild.save();
+
+      serverdb = await furina.serverdb.findOne({
+      serverId: interaction.guild.id
+    });
+    }
+
+    serverdb.usoDeComandos += 1;
+    await serverdb.save();
     const command = furina.commands.get(interaction.commandName);
     if (!command) return;
 
