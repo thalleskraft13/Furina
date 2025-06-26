@@ -33,6 +33,23 @@ class RankAventureiro {
 
       await userdb.save();
 
+      const arAtual = userdb.level.ar;
+
+      if ([17, 45, 60].includes(arAtual)) {
+        let conquistaId = null;
+        if (arAtual === 17) conquistaId = 10;
+        else if (arAtual === 45) conquistaId = 11;
+        else if (arAtual === 60) conquistaId = 12;
+
+        if (conquistaId) {
+          try {
+            await this.client.conquistas.addConquista(userId, conquistaId, "Progressão");
+          } catch (e) {
+            console.log("Erro ao adicionar conquista de AR:", e);
+          }
+        }
+      }
+
       const embedLog = new EmbedBuilder()
         .setTitle("✨ Level Up — Rank de Aventureiro!")
         .setColor("#3DD1D9")
@@ -41,7 +58,7 @@ class RankAventureiro {
           `🛡️ **Usuário:** <@${userId}> \`(${userId})\`\n` +
           `🌍 **Servidor:** ${guildId ? `<#${guildId}> \`(${guildId})\`` : "Direto no DM"}\n` +
           `📅 **Data:** <t:${Math.floor(Date.now() / 1000)}:F>\n\n` +
-          `🎉 Subiu para o **AR ${userdb.level.ar}**! Recompensas concedidas:\n` +
+          `🎉 Subiu para o **AR ${arAtual}**! Recompensas concedidas:\n` +
           `• 💎 160 Primogemas\n` +
           `• 💰 20.000 Mora\n\n` +
           `O espetáculo continua, bravo aventureiro!`
@@ -64,7 +81,7 @@ class RankAventureiro {
                 .addTextDisplayComponents(
                   new TextDisplayBuilder().setContent(
                     `**Oh là là! Um espetáculo digno dos aplausos mais estrondosos!** 🎭✨\n\n` +
-                    `Você subiu de Rank de Aventureiro! Agora ostenta o glorioso AR ${userdb.level.ar}, com nada menos que ${userdb.level.xp} pontos de experiência pulsando em suas veias! 💫\n` +
+                    `Você subiu de Rank de Aventureiro! Agora ostenta o glorioso AR ${arAtual}, com nada menos que ${userdb.level.xp} pontos de experiência pulsando em suas veias! 💫\n` +
                     `Como recompensa por tão magnífico progresso, receba **160 Primogemas** 💎 e **20.000 Mora** 💰!\n\n` +
                     `**O palco da aventura o aguarda — e que comece o segundo ato!** 🎬🌟\n\n` +
                     `📩 *Ah, e caso deseje silenciar os mensageiros dos céus e encerrar essas doces notificações por DM...*\n` +

@@ -39,7 +39,8 @@ const usuarioSchema = new Schema({
   mora: { type: Number, default: 0 },
   daily: { type: Number, default: 0 },
   codigos: { type: Array, default: [] },
-  premium: { type: Number, default: 0 }, // Timestamp em ms para premium ativo
+  premium: { type: Number, default: 0 }, 
+  conquistas: { type: Array,  default: [] },
   level: {
     ar: { type: Number, default: 1 },
     xp: { type: Number, default: 0 },

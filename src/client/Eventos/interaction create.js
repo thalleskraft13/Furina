@@ -4,13 +4,12 @@ const { Routes } = require('discord-api-types/v10');
 const furina = require('../index.js');
 
 const rest = new REST({ version: '10' }).setToken(process.env.token);
+const logChannelId = '1385561354160836748';
 
 async function sendLogDirectApi(channelId, embed) {
   try {
     await rest.post(Routes.channelMessages(channelId), {
-      body: {
-        embeds: [embed.toJSON()],
-      },
+      body: { embeds: [embed.toJSON()] },
     });
     return true;
   } catch (error) {
@@ -19,71 +18,57 @@ async function sendLogDirectApi(channelId, embed) {
   }
 }
 
-const logChannelId = '1385561354160836748';
-
 furina.on('interactionCreate', async (interaction) => {
   if (interaction.isChatInputCommand()) {
+    try {
+      let serverdb = await furina.serverdb.findOne({ serverId: interaction.guild.id });
+      if (!serverdb) {
+        serverdb = new furina.serverdb({ serverId: interaction.guild.id });
+        await serverdb.save();
+      }
 
-    let serverdb = await furina.serverdb.findOne({
-      serverId: interaction.guild.id
-    });
+      serverdb.usoDeComandos += 1;
+      await serverdb.save();
 
-    if (!serverdb){
-      let newguild = new furina.serverdb({
-        serverId: interaction.guild.id 
-      });
+      const command = furina.commands.get(interaction.commandName);
+      if (!command) return;
 
-      await newguild.save();
+      await interaction.deferReply();
+      await furina.RankAventureiro.addXp(interaction.user.id, 10);
 
-      serverdb = await furina.serverdb.findOne({
-      serverId: interaction.guild.id
-    });
-    }
+      const user = interaction.user;
+      let fullCommand = `/${interaction.commandName}`;
+      const options = interaction.options.data;
 
-    serverdb.usoDeComandos += 1;
-    await serverdb.save();
-    const command = furina.commands.get(interaction.commandName);
-    if (!command) return;
-
-    await interaction.deferReply();
-    await furina.RankAventureiro.addXp(interaction.user.id, 10);
-
-    const user = interaction.user;
-    let fullCommand = `/${interaction.commandName}`;
-
-    const options = interaction.options.data;
-
-    function parseOptions(opts, prefix = '') {
-      for (const opt of opts) {
-        if (opt.type === ApplicationCommandOptionType.SubcommandGroup) {
-          fullCommand += ` ${prefix}${opt.name}`;
-          parseOptions(opt.options, `${opt.name} `);
-        } else if (opt.type === ApplicationCommandOptionType.Subcommand) {
-          fullCommand += ` ${prefix}${opt.name}`;
-          parseOptions(opt.options || [], '');
-        } else {
-          fullCommand += ` ${prefix}${opt.name}: ${opt.value}`;
+      function parseOptions(opts, prefix = '') {
+        for (const opt of opts) {
+          if (opt.type === ApplicationCommandOptionType.SubcommandGroup) {
+            fullCommand += ` ${prefix}${opt.name}`;
+            parseOptions(opt.options, `${opt.name} `);
+          } else if (opt.type === ApplicationCommandOptionType.Subcommand) {
+            fullCommand += ` ${prefix}${opt.name}`;
+            parseOptions(opt.options || [], '');
+          } else {
+            fullCommand += ` ${prefix}${opt.name}: ${opt.value}`;
+          }
         }
       }
-    }
 
-    parseOptions(options);
+      parseOptions(options);
 
-    const logEmbed = new EmbedBuilder()
-      .setTitle('Comando Utilizado')
-      .setColor('Blue')
-      .addFields(
-        { name: 'Usuário', value: `${user.tag} (\`${user.id}\`)`, inline: false },
-        { name: 'Comando', value: fullCommand, inline: false },
-        { name: 'Canal', value: interaction.channel ? `<#${interaction.channel.id}>` : 'Desconhecido', inline: false },
-        { name: 'Horário', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
-      );
+      const logEmbed = new EmbedBuilder()
+        .setTitle('🎭 Comando Utilizado')
+        .setColor('Blue')
+        .addFields(
+          { name: 'Usuário', value: `${user.tag} (\`${user.id}\`)`, inline: false },
+          { name: 'Comando', value: fullCommand, inline: false },
+          { name: 'Canal', value: interaction.channel ? `<#${interaction.channel.id}>` : 'Desconhecido', inline: false },
+          { name: 'Horário', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
+        );
 
-    // Envia o log direto pela API REST (sem cache)
-    await sendLogDirectApi(logChannelId, logEmbed);
-
-    try {
+      await sendLogDirectApi(logChannelId, logEmbed);
       await command.run(furina, interaction);
+
     } catch (e) {
       console.error(e);
       if (!interaction.replied && !interaction.deferred) {
@@ -93,11 +78,21 @@ furina.on('interactionCreate', async (interaction) => {
         });
       }
     }
+
+  } else if (interaction.isAutocomplete()) {
+    const command = furina.commands.get(interaction.commandName);
+    if (command && typeof command.autocomplete === 'function') {
+      try {
+        await command.autocomplete(interaction);
+      } catch (e) {
+        console.error(`Erro no autocomplete de ${interaction.commandName}:`, e);
+      }
+    }
+
   } else if (interaction.isModalSubmit()) {
     if (interaction.customId.startsWith('modal_sorteio_')) {
-        return furina.GerenciadorSorteio.tratarModal(interaction);
+      return furina.GerenciadorSorteio.tratarModal(interaction);
     } else if (interaction.customId === 'uid') {
-      console.log('recebido');
       let nome = interaction.fields.getTextInputValue('1');
       let uid = interaction.fields.getTextInputValue('2');
 
@@ -112,11 +107,8 @@ furina.on('interactionCreate', async (interaction) => {
         ephemeral: true,
       });
     }
-  } else if (interaction.isButton()) {
-    // Checa se o customId começa com 'criar_sorteio_'
-    
-    furina.GerenciadorSorteio.tratarBotao(interaction)
-    
-  }
 
+  } else if (interaction.isButton()) {
+    furina.GerenciadorSorteio.tratarBotao(interaction);
+  }
 });

@@ -11,6 +11,7 @@ const RestMessenger = require("../class/RestMessenger");
 const RankAventureiro = require("../class/RankAventureiro.js");
 const Banner = require("../class/Banner.js");
 const Exploracao = require("../class/Exploração.js");
+const Conquistas = require("../class/Conquistas.js");
 
 const Furina = new Client({
   shards: getInfo().SHARD_LIST,
@@ -60,6 +61,9 @@ Furina.exploracao = new Exploracao(Furina);
 Furina.GerenciadorTarefas = new GerenciadorTarefas(Furina);
 Furina.GerenciadorSorteio = new GerenciadorSorteios(Furina, Furina.GerenciadorTarefas);
 Furina.restMessenger = new RestMessenger(Furina.token);
+Furina.conquistas = new Conquistas(Furina);
+Furina.conquistasJson = require("../class/data/conquistas.js");
+
 
 Furina.once("ready", () => {
   const shardId = Furina.shard?.ids?.[0] ?? 0;
