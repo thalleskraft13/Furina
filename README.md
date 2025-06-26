@@ -36,8 +36,6 @@ Um bot do Discord inspirado na Arconte da Justiça — **Furina**, de Genshin Im
 - MongoDB + Mongoose  
 - Canvas  
 - discord-hybrid-sharding  
-- Express.js para rotas REST  
-- Render (Deploy)
 
 ---
 
