@@ -1,11 +1,23 @@
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const Furina = require("../index.js");
-const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require("discord.js");
+const Sorteio = require("../mongodb/Sorteio");
+const UsuarioServidor = require("../mongodb/UsuarioServidor");
 
 Furina.on("messageCreate", async (message) => {
-  if (message.author.bot) return;
+  if (message.author.bot || !message.guild) return;
+
+  const usuarioId = message.author.id;
+  const servidorId = message.guild.id;
 
   // XP automático ao falar
-  await Furina.RankAventureiro.addXp(message.author.id, 5);
+  await Furina.RankAventureiro.addXp(usuarioId, 5);
+
+  
+  
+
+  await Furina.GerenciadorSorteio.tratarMensagem(message);
+ // await Furina.GerenciadorSorteio.tratarRespostaCanal(message);
+
 
   // Resposta ao mencionar o bot
   if (

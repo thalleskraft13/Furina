@@ -94,7 +94,9 @@ furina.on('interactionCreate', async (interaction) => {
       }
     }
   } else if (interaction.isModalSubmit()) {
-    if (interaction.customId === 'uid') {
+    if (interaction.customId.startsWith('modal_sorteio_')) {
+        return furina.GerenciadorSorteio.tratarModal(interaction);
+    } else if (interaction.customId === 'uid') {
       console.log('recebido');
       let nome = interaction.fields.getTextInputValue('1');
       let uid = interaction.fields.getTextInputValue('2');
@@ -110,5 +112,11 @@ furina.on('interactionCreate', async (interaction) => {
         ephemeral: true,
       });
     }
+  } else if (interaction.isButton()) {
+    // Checa se o customId começa com 'criar_sorteio_'
+    
+    furina.GerenciadorSorteio.tratarBotao(interaction)
+    
   }
+
 });

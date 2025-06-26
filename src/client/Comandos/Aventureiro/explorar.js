@@ -29,7 +29,6 @@ module.exports = {
       const subcmdgroup = interaction.options.getSubcommandGroup(false);
       const subcmd = interaction.options.getSubcommand();
 
-      // Garantir userdb
       let userdb = await client.userdb.findOne({ id: interaction.user.id });
       if (!userdb) {
         userdb = new client.userdb({ id: interaction.user.id });
@@ -38,8 +37,7 @@ module.exports = {
 
       if (subcmdgroup === "mondstadt" || interaction.options.getSubcommandGroup() === null) {
         if (subcmd === "iniciar") {
-          // Envia o select para escolher tempo
-          let img = new AttachmentBuilder("./img/nação/mondstadt.jpeg");
+          let img = new AttachmentBuilder("./src/img/nação/mondstadt.jpeg");
 
           const msg = await interaction.editReply({
             embeds: [
@@ -84,13 +82,19 @@ Escolha a duração da sua exploração para que Mondstadt revele seus segredos.
               const tempo = i.values[0]; // '1h', '5h' ou '10h'
               const tempoNum = parseInt(tempo);
 
-              const resposta = await client.exploracao.startMondstadt(interaction.user.id, tempoNum);
+              // Passa o canal e guild para criar lembrete
+              const resposta = await client.exploracao.startMondstadt(
+                interaction.user.id,
+                tempoNum,
+                interaction.channelId,
+                interaction.guildId
+              );
+
               return interaction.followUp({ content: resposta, ephemeral: true });
             }
           });
 
         } else if (subcmd === "coletar") {
-          // Coletar recompensas
           const resposta = await client.exploracao.collectMondstadt(interaction.user.id);
           return interaction.editReply({ content: resposta, ephemeral: true });
         }
@@ -101,7 +105,3 @@ Escolha a duração da sua exploração para que Mondstadt revele seus segredos.
     }
   }
 };
-
-function calcularPorcentagem(valor, total) {
-  return ((valor / total) * 100).toFixed(2) + "%";
-}

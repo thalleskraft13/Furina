@@ -3,7 +3,7 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBui
 const gifs = {
 "10tiro-t4": "https://files.catbox.moe/ejr418.gif",
 "10tiro-t5": "https://files.catbox.moe/4ztloj.gif",
-"1tiro-t3": "https://files.catbox.moe/4ztloj.gif",
+"1tiro-t3": "https://files.catbox.moe/hlkrkx.gif",
 "1tiro-t4": "https://files.catbox.moe/vay68b.gif",
 "1tiro-t5": "https://files.catbox.moe/e19qre.gif"
 };

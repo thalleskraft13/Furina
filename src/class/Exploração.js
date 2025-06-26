@@ -17,7 +17,7 @@ class Exploracao {
     return partes.join(", ");
   }
 
-  async startMondstadt(userId, timeHours) {
+  async startMondstadt(userId, timeHours, canalId, guildId) {
     let userdb = await this.furina.userdb.findOne({ id: userId });
 
     if (!userdb) {
@@ -52,8 +52,22 @@ Ainda restam ${tempoFormatado} para terminar sua exploração atual. Use \`/expl
 
     await userdb.save();
 
+    // Cria a tarefa lembrete para avisar o usuário no canal depois do tempo
+    const dadosTarefa = {
+      canalId,
+      userId,
+      mensagem: "Sua exploração de Mondstadt terminou! Volte para coletar suas recompensas.",
+      guildId
+    };
+
+    await this.furina.GerenciadorTarefas.criarTarefa(
+      "lembrete",
+      dadosTarefa,
+      new Date(agora + duracaoMs)
+    );
+
     return `Que os ventos te guiem! Sua exploração de ${timeHours}h por Mondstadt começou agora.  
-Volte mais tarde para resgatar seus tesouros com \`/explorar mondstadt coletar\`.`;
+Você será avisado aqui quando a exploração terminar para resgatar seus tesouros.`;
   }
 
   async collectMondstadt(userId) {

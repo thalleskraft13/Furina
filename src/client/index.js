@@ -1,13 +1,16 @@
 const { Client, Collection, GatewayIntentBits, Partials, EmbedBuilder } = require("discord.js");
 const { ClusterClient, getInfo } = require("discord-hybrid-sharding");
 const fs = require("fs");
-require("dotenv").config();
 const chalk = require("chalk");
-const connectMongo = require("./mongodb/connectMongo");
+require("dotenv").config();
 
+const connectMongo = require("./mongodb/connectMongo");
+const GerenciadorSorteios = require("../class/GerenciadorSorteio");
+const GerenciadorTarefas = require("../class/GerenciadorTarefas");
+const RestMessenger = require("../class/RestMessenger");
 const RankAventureiro = require("../class/RankAventureiro.js");
 const Banner = require("../class/Banner.js");
-const Exploração = require("../class/Exploração.js");
+const Exploracao = require("../class/Exploração.js");
 
 const Furina = new Client({
   shards: getInfo().SHARD_LIST,
@@ -19,7 +22,7 @@ const Furina = new Client({
     Partials.Reaction,
     Partials.GuildScheduledEvent,
     Partials.User,
-    Partials.ThreadMember,
+    Partials.ThreadMember
   ],
   intents: [
     GatewayIntentBits.Guilds,
@@ -28,37 +31,36 @@ const Furina = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.DirectMessages,
-    GatewayIntentBits.GuildPresences,
-  ],
+    GatewayIntentBits.GuildPresences
+  ]
 });
 
 Furina.cluster = new ClusterClient(Furina);
-Furina.clusterName = `Cluster-${Furina.cluster.id}`;
-let nomes = ["Juíza das Marés", "Orquestra das Fontes"]
+let nomes = ["Juíza das Marés", "Orquestra das Fontes"];
 Furina.clusterName = nomes[Furina.cluster.id];
 
-// Recebe nome do cluster do processo pai
 process.on("message", (msg) => {
   if (msg.type === "SET_NAME") Furina.clusterName = nomes[Furina.cluster.id];
 });
 
-// Conectar ao MongoDB
 connectMongo();
 
-// Estrutura
 Furina.commands = new Collection();
 Furina.events = new Collection();
 Furina.userdb = require("./mongodb/user.js");
 Furina.serverdb = require("./mongodb/servidores.js");
 Furina.MsgAuto = require("./mongodb/msg.js");
 Furina.website = "https://furina-do-discord.onrender.com";
-Furina.RankAventureiro = new RankAventureiro(Furina);
 Furina.bannerAtual = "1.0";
-Furina.Banner = new Banner(Furina);
-Furina.exploracao = new Exploração(Furina);
 Furina.categories = fs.readdirSync("./src/client/Comandos");
 
-// Quando o bot estiver pronto
+Furina.RankAventureiro = new RankAventureiro(Furina);
+Furina.Banner = new Banner(Furina);
+Furina.exploracao = new Exploracao(Furina);
+Furina.GerenciadorTarefas = new GerenciadorTarefas(Furina);
+Furina.GerenciadorSorteio = new GerenciadorSorteios(Furina, Furina.GerenciadorTarefas);
+Furina.restMessenger = new RestMessenger(Furina.token);
+
 Furina.once("ready", () => {
   const shardId = Furina.shard?.ids?.[0] ?? 0;
   const guilds = Furina.guilds.cache;
@@ -68,31 +70,63 @@ Furina.once("ready", () => {
     guild.members.cache.forEach((member) => userSet.add(member.user.id));
   }
 
-  const totalUsers = userSet.size;
-  const totalGuilds = guilds.size;
-
   console.log(
     chalk.hex("#7F7FFF")(`🧩 ${Furina.clusterName}`) +
     chalk.hex("#00AEEF")(` | Shard ${shardId} | `) +
-    chalk.green(`Servidores: ${totalGuilds} | Usuários únicos: ${totalUsers}`)
+    chalk.green(`Servidores: ${guilds.size} | Usuários únicos: ${userSet.size}`)
   );
+
+  const statusList = [
+    [
+      "O julgamento está prestes a começar~",
+      "As marés dançam ao meu favor~",
+      "A plateia está em silêncio, aguardando o espetáculo~",
+      "A justiça será encenada com perfeição!",
+      "Quem ousa interromper minha performance?",
+      "Cada palavra minha é poesia... e sentença~"
+    ],
+    [
+      "Entre drama e destino, eu escolho os dois!",
+      "Você é o próximo a subir no palco do julgamento~",
+      "Culpado ou inocente? Que dilema encantador!",
+      "Os aplausos não mentem, mon cher~",
+      "Minha voz é lei, meu gesto é arte~",
+      "O palco está armado, e eu sou a estrela~"
+    ]
+  ];
+
+  let grupoIndex = Furina.cluster.id;
+
+  function atualizarStatus() {
+    const grupo = statusList[grupoIndex];
+    const frase = grupo[Math.floor(Math.random() * grupo.length)];
+
+    Furina.user.setPresence({
+      status: 'dnd',
+      activities: [
+        {
+          name: frase,
+          type: 0
+        }
+      ]
+    });
+
+    grupoIndex = (grupoIndex + 1) % statusList.length;
+  }
+
+  atualizarStatus();
+  setInterval(atualizarStatus, 1000 * 60 * 5);
 });
 
-// Login + carregamento dos handlers e eventos manuais
 Furina.login(process.env.token).then(() => {
-  // 🔹 Handlers (slash + eventos automáticos)
   ["event_handler", "slash_handler"].forEach((handler) => {
     require(`./handlers/${handler}`)(Furina);
   });
 
-  // 🔹 Eventos diretos de entrada/saída de servidores
   const canalLogsId = "1385561296468054096";
 
   Furina.on("guildCreate", async (guild) => {
     try {
-      const canal = await Furina.channels.fetch(canalLogsId).catch(() => null);
-      if (!canal) return;
-
       const embed = new EmbedBuilder()
         .setTitle("✨ A Furina do Discord foi adicionada!")
         .setColor("#3DD1D9")
@@ -100,7 +134,7 @@ Furina.login(process.env.token).then(() => {
         .setThumbnail(guild.iconURL({ dynamic: true }))
         .setTimestamp();
 
-      canal.send({ embeds: [embed] });
+      await Furina.restMessenger.enviar(canalLogsId, { embeds: [embed] });
     } catch (e) {
       console.error("Erro ao processar guildCreate:", e);
     }
@@ -108,9 +142,6 @@ Furina.login(process.env.token).then(() => {
 
   Furina.on("guildDelete", async (guild) => {
     try {
-      const canal = await Furina.channels.fetch(canalLogsId).catch(() => null);
-      if (!canal) return;
-
       const embed = new EmbedBuilder()
         .setTitle("💔 A Furina do Discord foi removida!")
         .setColor("#ff4c4c")
@@ -118,7 +149,7 @@ Furina.login(process.env.token).then(() => {
         .setThumbnail(guild.iconURL({ dynamic: true }))
         .setTimestamp();
 
-      canal.send({ embeds: [embed] });
+      await Furina.restMessenger.enviar(canalLogsId, { embeds: [embed] });
     } catch (e) {
       console.error("Erro ao processar guildDelete:", e);
     }
