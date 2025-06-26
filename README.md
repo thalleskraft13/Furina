@@ -52,7 +52,7 @@ Explore mais do projeto e interaja com recursos externos:
 - Desenvolvido por [ThallesKraft]  
 - Personagem baseada em: **Furina (Genshin Impact)**  
 - Todos os direitos dos personagens pertencem à HoYoverse  
-- Este projeto é feito por fãs, sem fins lucrativos e sem afiliação oficial
+- Este projeto é feito por fãs, sem afiliação oficial
 
 ---
 
