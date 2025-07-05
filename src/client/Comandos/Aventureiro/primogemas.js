@@ -127,9 +127,13 @@ module.exports = {
         );
 
         let descricao = "";
-        sliceUsuarios.forEach((u, idx) => {
-          descricao += `**${(pagina - 1) * itensPorPagina + idx + 1}** - <@${u.id}> com **${u.primogemas}** primogemas\n`;
-        });
+for (let idx = 0; idx < sliceUsuarios.length; idx++) {
+  const u = sliceUsuarios[idx];
+  const user = client.users.cache.get(u.id) || await client.users.fetch(u.id).catch(() => null);
+  const username = user ? user.username : "Desconhecido";
+  descricao += `**${(pagina - 1) * itensPorPagina + idx + 1}** - [${username}](https://discord.com/users/${u.id}) com **${u.primogemas}** primogemas\n`;
+}
+
 
         if (descricao.length === 0) descricao = "✨ Ainda não há aventureiros registrados no ranking.";
 
@@ -185,9 +189,13 @@ module.exports = {
           );
 
           let novaDescricao = "";
-          novaSliceUsuarios.forEach((u, idx) => {
-            novaDescricao += `**${(novaPagina - 1) * itensPorPagina + idx + 1}** - <@${u.id}> com **${u.primogemas}** primogemas\n`;
-          });
+for (let idx = 0; idx < novaSliceUsuarios.length; idx++) {
+  const u = novaSliceUsuarios[idx];
+  const user = client.users.cache.get(u.id) || await client.users.fetch(u.id).catch(() => null);
+  const username = user ? user.username : "Não encontrado";
+  novaDescricao += `**${(novaPagina - 1) * itensPorPagina + idx + 1}** - [${username}](https://discord.com/users/${u.id}) com **${u.primogemas}** primogemas\n`;
+}
+
           if (novaDescricao.length === 0) novaDescricao = "✨ Ainda não há aventureiros registrados no ranking.";
 
           const novoEmbed = new EmbedBuilder()

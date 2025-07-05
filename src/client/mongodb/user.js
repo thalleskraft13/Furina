@@ -40,7 +40,7 @@ const usuarioSchema = new Schema({
   daily: { type: Number, default: 0 },
   codigos: { type: Array, default: [] },
   premium: { type: Number, default: 0 }, 
-  conquistas: { type: Array,  default: [] },
+  conquistas: { type: Array, default: [] },
   level: {
     ar: { type: Number, default: 1 },
     xp: { type: Number, default: 0 },
@@ -72,6 +72,25 @@ const usuarioSchema = new Schema({
         nv: { type: Number, default: 0 },
         quantidade: { type: Number, default: 0 },
         anemoculus: { type: Number, default: 0 },
+      }
+    },
+    liyue: {
+      reputacao: {
+        nv: { type: Number, default: 0 },
+        xp: { type: Number, default: 0 },
+      },
+      exploracao: {
+        bausPreciosos: { type: Number, default: 0 },
+        bausComuns: { type: Number, default: 0 },
+        bausLuxuosos: { type: Number, default: 0 },
+        time: { type: Number, default: 0 },
+        resgatado: { type: Boolean, default: true },
+        resgatar: { type: Boolean, default: false }
+      },
+      estatuaDosSetes: {
+        nv: { type: Number, default: 0 },
+        quantidade: { type: Number, default: 0 },
+        geoculus: { type: Number, default: 0 },
       }
     }
   },

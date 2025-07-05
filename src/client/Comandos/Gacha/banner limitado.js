@@ -21,7 +21,7 @@ await new Furina.userdb({ id: interaction.user.id }).save();
 userdb = await Furina.userdb.findOne({ id: interaction.user.id });
 }
 
-if (userdb.uid === "0") {
+/*if (userdb.uid === "0") {
 let msg = await interaction.editReply({
 content: `Ah, meu caro! Vejo que ainda não há um UID gravado em seus registros. Salve-o agora para que a magia possa prosseguir!`,
 components: [
@@ -62,12 +62,13 @@ new TextInputBuilder()
 modal.addComponents(op_1, op_2);
 await i.showModal(modal);
 });
-}
+}*/
 
 const bannerURL = `attachment://${Furina.bannerAtual}.jpeg`;
 const file = new AttachmentBuilder(`./src/img/banners/${Furina.bannerAtual}.jpeg`);
 const embed = new EmbedBuilder()
 .setTitle("**O palco estrelado desta temporada!**")
+.setDescription("O banner termina <t:1753015080:R>")
 .setImage(bannerURL)
 .setFooter({
 text: `Pity: ${userdb.gacha.pity.five}/90 | Garantia: ${userdb.gacha.pity.garantia5 ? "Sim" : "Não"}`

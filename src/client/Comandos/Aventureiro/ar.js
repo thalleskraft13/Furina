@@ -47,12 +47,11 @@ module.exports = {
 
         let userdb = await client.userdb.findOne({ id: user.id });
         if (!userdb) {
-          userdb = new client.userdb({ id: user.id, primogemas: 0 });
+          userdb = new client.userdb({ id: user.id, primogemas: 0, level: { ar: 1, xp: 0, xpMax: 100 } });
           await userdb.save();
         }
 
         const allUsers = await client.userdb.find({}).sort({ "level.ar": -1, "level.xp": -1 }).lean();
-
         const globalRank = allUsers.findIndex((u) => u.id === user.id) + 1 || "Não encontrado";
 
         let serverRank = "Não encontrado";
@@ -68,10 +67,10 @@ module.exports = {
           .setColor("#3DD1D9")
           .setDescription(
             `**AR:** ${userdb.level.ar}\n` +
-              `**XP:** ${userdb.level.xp} (Faltam ${userdb.level.xpMax - userdb.level.xp} para o próximo nível)\n\n` +
-              `🏆 **Rank Global:** ${globalRank}\n` +
-              `🏰 **Rank no Servidor:** ${serverRank}\n\n` +
-              `"_Que as marés da justiça sempre guiem seu caminho_~"`
+            `**XP:** ${userdb.level.xp} (Faltam ${userdb.level.xpMax - userdb.level.xp} para o próximo nível)\n\n` +
+            `🏆 **Rank Global:** ${globalRank}\n` +
+            `🏰 **Rank no Servidor:** ${serverRank}\n\n` +
+            `"_Que as marés da justiça sempre guiem seu caminho_~"`
           )
           .setFooter({ text: "Sob a luz das marés, brilhe intensamente~" });
 
@@ -91,23 +90,24 @@ module.exports = {
       }
 
       if (usuarios.length === 0) {
-        return interaction.editReply("✨ Aventuriero, não encontrei dados para mostrar o rank.");
+        return interaction.editReply("✨ Aventureiro, não encontrei dados para mostrar o rank.");
       }
 
       let page = 1;
       const totalPages = Math.ceil(usuarios.length / ITEMS_PER_PAGE);
 
-      function gerarEmbed(pageNum) {
+      async function gerarEmbed(pageNum) {
         const start = (pageNum - 1) * ITEMS_PER_PAGE;
         const end = start + ITEMS_PER_PAGE;
         const pageItems = usuarios.slice(start, end);
 
-        const descricao = pageItems
-          .map(
-            (u, i) =>
-              `\`${start + i + 1}\`. <@${u.id}> — **AR ${u.level.ar}** (XP: ${u.level.xp})`
-          )
-          .join("\n");
+        let descricao = "";
+        for (let i = 0; i < pageItems.length; i++) {
+          const u = pageItems[i];
+          const user = client.users.cache.get(u.id) || await client.users.fetch(u.id).catch(() => null);
+          const username = user ? user.username : "Não encontrado";
+          descricao += `\`${start + i + 1}\`. [${username}](https://discord.com/users/${u.id}) — **AR ${u.level.ar}** (XP: ${u.level.xp})\n`;
+        }
 
         return new EmbedBuilder()
           .setTitle(
@@ -115,7 +115,7 @@ module.exports = {
               ? "🏆 Rank Global de Aventureiros"
               : "🏰 Rank do Servidor"
           )
-          .setDescription(descricao)
+          .setDescription(descricao || "✨ Nenhum aventureiro encontrado nesta página.")
           .setFooter({ text: `Página ${pageNum} de ${totalPages} | Sob o olhar atento da justiça~` })
           .setColor("#3DD1D9");
       }
@@ -136,7 +136,7 @@ module.exports = {
       }
 
       await interaction.editReply({
-        embeds: [gerarEmbed(page)],
+        embeds: [await gerarEmbed(page)],
         components: [gerarBotoes(page)],
       });
 
@@ -155,11 +155,14 @@ module.exports = {
 
         if (btnInt.customId === "voltar" && page > 1) {
           page--;
-          await btnInt.update({ embeds: [gerarEmbed(page)], components: [gerarBotoes(page)] });
         } else if (btnInt.customId === "proximo" && page < totalPages) {
           page++;
-          await btnInt.update({ embeds: [gerarEmbed(page)], components: [gerarBotoes(page)] });
         }
+
+        await btnInt.update({
+          embeds: [await gerarEmbed(page)],
+          components: [gerarBotoes(page)],
+        });
       });
 
     } catch (e) {

@@ -3,10 +3,10 @@ class Banner {
     this.client = client;
     this.version = "1.0";
 
-    this.t5 = "YaeMiko";
-    this.t4 = ["ShikanoinHeizou", "Layla", "Thoma"];
+    this.t5 = "Arlecchino";
+    this.t4 = ["Chevreuse", "LanYan", "Rosaria"];
     this.t5_mochileiro = ["Mona", "Diluc", "Qiqi", "Jean", "Keqing"];
-    this.t4_mochileiro = ["Noelle", "Barbara", "Charlotte", "Chongyun", "Mika"];
+    this.t4_mochileiro = ["Noelle", "Barbara", "Charlotte", "Chongyun", "Mika", "ShikanoinHeizou", "Layla", "Thoma"];
 
     this.personagensElementos = {
       Furina: "Hydro",
@@ -14,17 +14,18 @@ class Banner {
       ShikanoinHeizou: "Anemo",
       Layla: "Cryo",
       Thoma: "Pyro",
-
+      Arlecchino: "Pyro",
+      Chevreuse: "Pryo",
+      LanYan: "Anemo",
+      Rosaria: "Cryo",
       Mona: "Hydro",
       Diluc: "Pyro",
       Qiqi: "Cryo",
       Jean: "Anemo",
       Keqing: "Electro",
-
       Charlotte: "Cryo",
       Chongyun: "Cryo",
       Mika: "Electro",
-
       Noelle: "Geo",
       Barbara: "Hydro",
     };

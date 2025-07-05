@@ -11,8 +11,16 @@ Furina.on("messageCreate", async (message) => {
 
   // XP automático ao falar
   await Furina.RankAventureiro.addXp(usuarioId, 5);
-
   
+  try {
+    const userdb = await Furina.userdb.findOne({ id: usuarioId });
+    if (userdb && userdb.premium && userdb.premium > Date.now()) {
+      userdb.primogemas += 5;
+      await userdb.save();
+    }
+  } catch (e) {
+      return;
+  }
   
 
   await Furina.GerenciadorSorteio.tratarMensagem(message);

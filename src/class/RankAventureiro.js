@@ -23,7 +23,14 @@ class RankAventureiro {
       userdb = newUser;
     }
 
-    userdb.level.xp += value;
+    const agora = Date.now();
+  let xpToAdd = value;
+  if (userdb.premium && userdb.premium > agora) {
+    xpToAdd = Math.floor(value * 1.5);
+  }
+
+  userdb.level.xp += xpToAdd;
+    
 
     if (userdb.level.xp >= userdb.level.xpMax) {
       userdb.level.ar++;
@@ -73,21 +80,18 @@ class RankAventureiro {
 
       if (userdb.notificar) {
         try {
-          const user = await this.client.users.fetch(userId);
+          const user = await this.client.users.cache.get(userId);
           await user.send({
-            components: [
-              new ContainerBuilder()
-                .setAccentColor(2046807)
-                .addTextDisplayComponents(
-                  new TextDisplayBuilder().setContent(
-                    `**Oh là là! Um espetáculo digno dos aplausos mais estrondosos!** 🎭✨\n\n` +
-                    `Você subiu de Rank de Aventureiro! Agora ostenta o glorioso AR ${arAtual}, com nada menos que ${userdb.level.xp} pontos de experiência pulsando em suas veias! 💫\n` +
+            embeds: [
+              new EmbedBuilder()
+                .setColor(2046807)
+                .setTitle("**Oh là là! Um espetáculo digno dos aplausos mais estrondosos!** 🎭✨")
+                 .setDescription(`Você subiu de Rank de Aventureiro! Agora ostenta o glorioso AR ${arAtual}, com nada menos que ${userdb.level.xp} pontos de experiência pulsando em suas veias! 💫\n` +
                     `Como recompensa por tão magnífico progresso, receba **160 Primogemas** 💎 e **20.000 Mora** 💰!\n\n` +
                     `**O palco da aventura o aguarda — e que comece o segundo ato!** 🎬🌟\n\n` +
                     `📩 *Ah, e caso deseje silenciar os mensageiros dos céus e encerrar essas doces notificações por DM...*\n` +
-                    `Use o comando **/notificação desativar** e deixe o silêncio cair como a cortina no fim do espetáculo. 🎼🎭`
+                    `Use o comando **/notificações desativar** e deixe o silêncio cair como a cortina no fim do espetáculo. 🎼🎭`
                   )
-                )
             ]
           });
         } catch (err) {

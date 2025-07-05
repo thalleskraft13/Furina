@@ -62,8 +62,11 @@ furina.on('interactionCreate', async (interaction) => {
         .addFields(
           { name: 'Usuário', value: `${user.tag} (\`${user.id}\`)`, inline: false },
           { name: 'Comando', value: fullCommand, inline: false },
-          { name: 'Canal', value: interaction.channel ? `<#${interaction.channel.id}>` : 'Desconhecido', inline: false },
+          { name: 'Canal', value: interaction.channel ? `${interaction.channel.name}` : 'Desconhecido', inline: false },
           { name: 'Horário', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
+          {
+            name: "Servidor", value: interaction.guild ? `${interaction.guild.name} \`(${interaction.guild.id})\`` : "Desconhecido", inline: false }
+          
         );
 
       await sendLogDirectApi(logChannelId, logEmbed);

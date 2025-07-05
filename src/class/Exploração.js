@@ -17,20 +17,41 @@ class Exploracao {
     return partes.join(", ");
   }
 
-  async startMondstadt(userId, timeHours, canalId, guildId) {
-    let userdb = await this.furina.userdb.findOne({ id: userId });
+  calcularRecompensas(duracaoHoras, regioesExtras = false) {
+    const fator = regioesExtras ? 1.25 : 1;
+    const comuns = Math.floor(duracaoHoras * 1.8 * fator);
+    const preciosos = Math.floor(duracaoHoras * 0.6 * fator);
+    const luxuosos = Math.floor(duracaoHoras * 0.2 * fator);
+    const primogemas = comuns * 2 + preciosos * 5 + luxuosos * 10;
 
+    return { comuns, preciosos, luxuosos, primogemas };
+  }
+
+  async startRegiao(userId, timeHours, canalId, guildId, regiao) {
+    let userdb = await this.furina.userdb.findOne({ id: userId });
     if (!userdb) {
       userdb = new this.furina.userdb({ id: userId });
       await userdb.save();
     }
 
-    const exploracao = userdb.regioes.mondstadt.exploracao;
-    const totalBaus = exploracao.bausPreciosos + exploracao.bausComuns + exploracao.bausLuxuosos;
+    const exploracao = userdb.regioes[regiao].exploracao;
 
-    if (totalBaus >= 500) {
-      return `Bravo aventureiro, tua jornada por Mondstadt já atingiu o ápice, com 500 baús descobertos!  
-Por ora, os ventos pedem uma pausa — explore novos horizontes depois.`;
+    const totalBaus =
+      exploracao.bausComuns +
+      exploracao.bausPreciosos +
+      exploracao.bausLuxuosos;
+
+    // Limites personalizados por região
+    const limites = {
+      mondstadt: 500,
+      liyue: 1000
+    };
+
+    const limiteMaximo = limites[regiao] || 500;
+
+    if (totalBaus >= limiteMaximo) {
+      return `Aventureiro, tua lenda em ${regiao[0].toUpperCase() + regiao.slice(1)} já brilha com **${limiteMaximo} baús** descobertos!  
+Descansa por ora, e retorna quando os ventos mudarem.`;
     }
 
     const agora = Date.now();
@@ -38,91 +59,87 @@ Por ora, os ventos pedem uma pausa — explore novos horizontes depois.`;
     if (exploracao.time && exploracao.time > agora) {
       const restanteMs = exploracao.time - agora;
       const tempoFormatado = this.formatarTempo(restanteMs);
-      return `Os ventos ainda guiam sua jornada, aventureiro...  
-Ainda restam ${tempoFormatado} para terminar sua exploração atual. Use \`/explorar mondstadt coletar\` quando estiver pronto.`;
+      return `A brisa da jornada ainda sopra...  
+Faltam ${tempoFormatado} para concluir a exploração de ${regiao}.`;
     }
 
     if (exploracao.resgatar) {
-      return "Você já tem recompensas prontas para coletar! Use `/explorar mondstadt coletar` para receber seus tesouros.";
+      return `Você já possui recompensas para coletar em ${regiao}. Use \`/explorar ${regiao} coletar\`.`;
     }
 
     const duracaoMs = timeHours * 3600000;
-    userdb.regioes.mondstadt.exploracao.time = agora + duracaoMs;
-    userdb.regioes.mondstadt.exploracao.resgatar = true;
+    exploracao.time = agora + duracaoMs;
+    exploracao.resgatar = true;
 
     await userdb.save();
 
-    // Cria a tarefa lembrete para avisar o usuário no canal depois do tempo
-    const dadosTarefa = {
-      canalId,
-      userId,
-      mensagem: "Sua exploração de Mondstadt terminou! Volte para coletar suas recompensas.",
-      guildId
-    };
-
     await this.furina.GerenciadorTarefas.criarTarefa(
       "lembrete",
-      dadosTarefa,
+      {
+        canalId,
+        userId,
+        guildId,
+        mensagem: `A exploração de ${regiao} foi concluída! Recolha tuas recompensas gloriosas.`,
+      },
       new Date(agora + duracaoMs)
     );
 
-    return `Que os ventos te guiem! Sua exploração de ${timeHours}h por Mondstadt começou agora.  
-Você será avisado aqui quando a exploração terminar para resgatar seus tesouros.`;
+    return `🌿 Iniciaste tua jornada de ${timeHours}h por ${regiao[0].toUpperCase() + regiao.slice(1)}.  
+Sábios ecos te chamarão quando a busca chegar ao fim.`;
   }
 
-  async collectMondstadt(userId) {
-    let userdb = await this.furina.userdb.findOne({ id: userId });
+  async collectRegiao(userId, regiao) {
+    const userdb = await this.furina.userdb.findOne({ id: userId });
+    if (!userdb) return `Não encontramos teus passos por ${regiao}, aventureiro.`;
 
-    if (!userdb) {
-      return "Você ainda não começou a explorar Mondstadt, aventureiro!";
-    }
-
+    const exploracao = userdb.regioes[regiao].exploracao;
     const agora = Date.now();
-    const exploracao = userdb.regioes.mondstadt.exploracao;
 
-    if (!exploracao.time || exploracao.time <= agora) {
-      if (!exploracao.resgatar) {
-        return "Você não está explorando no momento. Use `/explorar mondstadt iniciar` para começar sua jornada!";
-      }
+    if (!exploracao.time || exploracao.time > agora)
+      return `A exploração por ${regiao} ainda não foi concluída. Aguarde com paciência...`;
 
-      // Coletar recompensas
-      let comuns = 0, preciosos = 0, luxuosos = 0;
+    if (!exploracao.resgatar)
+      return `Inicie uma nova exploração por ${regiao} usando \`/explorar ${regiao} iniciar\`.`;
 
-      const tempoDuracao = (exploracao.time - (agora - 10 * 60 * 60 * 1000)) / (60 * 60 * 1000);
+    const duracaoHoras = Math.max(
+      1,
+      Math.round((exploracao.time - (agora - 12 * 60 * 60 * 1000)) / 3600000)
+    );
 
-      if (tempoDuracao >= 10) {
-        comuns = 12; preciosos = 5; luxuosos = 2;
-      } else if (tempoDuracao >= 5) {
-        comuns = 6; preciosos = 3; luxuosos = 1;
-      } else {
-        comuns = 3; preciosos = 1; luxuosos = 0;
-      }
+    const { comuns, preciosos, luxuosos, primogemas } = this.calcularRecompensas(duracaoHoras, regiao === "liyue");
 
-      const primogemas = comuns * 2 + preciosos * 5 + luxuosos * 10;
+    exploracao.bausComuns += comuns;
+    exploracao.bausPreciosos += preciosos;
+    exploracao.bausLuxuosos += luxuosos;
+    exploracao.time = 0;
+    exploracao.resgatar = false;
+    userdb.primogemas += primogemas;
 
-      userdb.regioes.mondstadt.exploracao.bausComuns += comuns;
-      userdb.regioes.mondstadt.exploracao.bausPreciosos += preciosos;
-      userdb.regioes.mondstadt.exploracao.bausLuxuosos += luxuosos;
-      userdb.regioes.mondstadt.exploracao.time = 0;
-      userdb.regioes.mondstadt.exploracao.resgatar = false;
-      userdb.primogemas += primogemas;
+    await userdb.save();
 
-      await userdb.save();
+    return `🌟 Tua expedição por ${regiao[0].toUpperCase() + regiao.slice(1)} rendeu frutos!  
+> **Baús Comuns:** ${comuns}  
+> **Preciosos:** ${preciosos}  
+> **Luxuosos:** ${luxuosos}  
+💎 Primogemas adquiridas: **${primogemas}**  
+Volta sempre — o mundo ainda guarda segredos para ti!`;
+  }
 
-      return `Ah, retornaste sob aplausos invisíveis!  
-Tesouros encontrados:  
-> Baús Comuns: ${comuns}  
-> Preciosos: ${preciosos}  
-> Luxuosos: ${luxuosos}  
+  // Funções públicas para comandos individuais
+  startMondstadt(...args) {
+    return this.startRegiao(...args, "mondstadt");
+  }
 
-Primogemas arrecadadas: **${primogemas}**  
-Que tua sorte continue a dançar contigo!`;
-    } else {
-      const restanteMs = exploracao.time - agora;
-      const tempoFormatado = this.formatarTempo(restanteMs);
-      return `A exploração ainda está em andamento, bravo aventureiro...  
-Faltam ${tempoFormatado} para concluir a jornada. Tenha paciência e aguarde os ventos.`;
-    }
+  collectMondstadt(userId) {
+    return this.collectRegiao(userId, "mondstadt");
+  }
+
+  startLiyue(...args) {
+    return this.startRegiao(...args, "liyue");
+  }
+
+  collectLiyue(userId) {
+    return this.collectRegiao(userId, "liyue");
   }
 }
 
