@@ -10,7 +10,6 @@ class GerenciadorTarefas {
 
   iniciar() {
     this.interval = setInterval(() => this.checarTarefasPendentes(), this.checarIntervalo);
-    console.log('[TAREFAS] Gerenciador de Tarefas iniciado.');
   }
 
   async checarTarefasPendentes() {

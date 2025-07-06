@@ -1,68 +1,59 @@
-const { ClusterManager } = require('discord-hybrid-sharding');
-require("dotenv").config()
-const { token } = process.env;
-const chalk = require('chalk');
+const { ClusterManager } = require("discord-hybrid-sharding");
+require("dotenv").config();
+const chalk = require("chalk");
+
+const token = process.env.token;
 
 const furina = {
-  info: chalk.hex('#00AEEF').bold,
-  cluster: chalk.hex('#7F7FFF').bold,
-  warn: chalk.hex('#FFD700').bold,
-  error: chalk.hex('#FF4C4C').bold,
-  label: chalk.hex('#88CCFF').italic,
+  info: chalk.hex("#00AEEF").bold,
+  cluster: chalk.hex("#7F7FFF").bold,
+  warn: chalk.hex("#FFD700").bold,
+  error: chalk.hex("#FF4C4C").bold,
+  label: chalk.hex("#88CCFF").italic,
 };
 
-const clusterNames = ['Juíza das Marés', 'Orquestra das Fontes'];
+const clusterNames = ["Juíza das Marés", "Orquestra das Fontes"];
 
 const manager = new ClusterManager(`${__dirname}/client/index.js`, {
   totalShards: 2,
   totalClusters: 2,
   shardsPerClusters: 1,
-  mode: 'process',
+  mode: "process",
   token,
 });
 
-manager.on('clusterCreate', async (cluster) => {
-  const name = clusterNames[cluster.id] || `Cluster-${cluster.id}`;
-  cluster.send({ type: 'SET_NAME', name });
+function logClusterHeader(clusterId) {
+  const name = clusterNames[clusterId] || `Cluster-${clusterId}`;
+  console.log(`\n\n[${new Date().toLocaleTimeString()}]`);
+  console.log(furina.cluster(`Cluster ${clusterId + 1} iniciado como "${name}"`));
+}
 
-  try {
-    // Pede stats do cluster com timeout de 5s
-    const stats = await cluster.request({ type: 'GET_STATS' }, 5000);
-    const guildCount = stats.guildCount ?? 0;
-    const userCount = stats.userCount ?? 0;
-
-    console.log(
-      furina.cluster(`🧩 Cluster ${cluster.id} iniciado como `) +
-        furina.label(`"${name}"`) +
-        furina.info(` — Servidores: ${guildCount} | Usuários: ${userCount}`)
-    );
-  } catch (err) {
-    console.log(
-      furina.cluster(`🧩 Cluster ${cluster.id} iniciado como `) +
-        furina.label(`"${name}"`) +
-        furina.warn(` — Servidores e usuários: dados indisponíveis`)
-    );
-  }
+manager.on("clusterCreate", (cluster) => {
+  logClusterHeader(cluster.id);
+  console.log(furina.info("  - 🧩 Iniciado"));
+  cluster.send({ type: "SET_NAME", name: clusterNames[cluster.id] || `Cluster-${cluster.id}` });
 });
 
-manager.on('clusterDeath', (cluster) => {
-  console.log(
-    furina.error(`💀 O Cluster ${cluster.id} caiu! `) + furina.warn('Reiniciando...')
-  );
+// Removido o manager.on("message") para não receber infos do cluster
+
+manager.on("clusterDeath", (cluster) => {
+  logClusterHeader(cluster.id);
+  console.log(furina.error("  - 💀 Caiu! Reiniciando..."));
   manager.fork(cluster.id);
 });
 
-process.on('unhandledRejection', (reason) => {
-  console.log(furina.error('🚨 Unhandled Rejection:\n') + furina.label(reason));
+process.on("unhandledRejection", (reason) => {
+  console.log(furina.error(`🚨 Unhandled Rejection:\n${reason instanceof Error ? reason.stack : reason}`));
 });
 
-process.on('uncaughtException', (err) => {
-  console.log(furina.error('💥 Uncaught Exception:\n') + furina.label(err));
+process.on("uncaughtException", (err) => {
+  console.log(furina.error(`💥 Uncaught Exception:\n${err instanceof Error ? err.stack : err}`));
 });
 
-process.on('uncaughtExceptionMonitor', (err) => {
-  console.log(furina.warn('🔍 Monitorando erro:\n') + furina.label(err));
+process.on("uncaughtExceptionMonitor", (err) => {
+  console.log(furina.warn(`🔍 Monitorando erro:\n${err instanceof Error ? err.stack : err}`));
 });
 
-console.log(furina.info('\n✨ Iniciando o espetáculo da Furina...\n'));
+console.log(furina.info("\n✨ Iniciando o espetáculo da Furina...\n"));
+
 manager.spawn({ timeout: -1 });

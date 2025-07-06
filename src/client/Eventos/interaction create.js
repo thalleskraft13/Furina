@@ -1,7 +1,6 @@
 const { ApplicationCommandOptionType, EmbedBuilder } = require('discord.js');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v10');
-const furina = require('../index.js');
 
 const rest = new REST({ version: '10' }).setToken(process.env.token);
 const logChannelId = '1385561354160836748';
@@ -18,100 +17,105 @@ async function sendLogDirectApi(channelId, embed) {
   }
 }
 
-furina.on('interactionCreate', async (interaction) => {
-  if (interaction.isChatInputCommand()) {
-    try {
-      let serverdb = await furina.serverdb.findOne({ serverId: interaction.guild.id });
-      if (!serverdb) {
-        serverdb = new furina.serverdb({ serverId: interaction.guild.id });
+module.exports = {
+  evento: "interactionCreate",
+  run: async (client, interaction) => {
+    if (interaction.isChatInputCommand()) {
+      try {
+        let serverdb = await client.serverdb.findOne({ serverId: interaction.guild.id });
+        if (!serverdb) {
+          serverdb = new client.serverdb({ serverId: interaction.guild.id });
+          await serverdb.save();
+        }
+
+        serverdb.usoDeComandos += 1;
         await serverdb.save();
-      }
 
-      serverdb.usoDeComandos += 1;
-      await serverdb.save();
+        const command = client.commands.get(interaction.commandName);
+        if (!command) return;
 
-      const command = furina.commands.get(interaction.commandName);
-      if (!command) return;
+        await interaction.deferReply();
+        await client.RankAventureiro.addXp(interaction.user.id, 10);
 
-      await interaction.deferReply();
-      await furina.RankAventureiro.addXp(interaction.user.id, 10);
+        const user = interaction.user;
+        let fullCommand = `/${interaction.commandName}`;
+        const options = interaction.options.data;
 
-      const user = interaction.user;
-      let fullCommand = `/${interaction.commandName}`;
-      const options = interaction.options.data;
-
-      function parseOptions(opts, prefix = '') {
-        for (const opt of opts) {
-          if (opt.type === ApplicationCommandOptionType.SubcommandGroup) {
-            fullCommand += ` ${prefix}${opt.name}`;
-            parseOptions(opt.options, `${opt.name} `);
-          } else if (opt.type === ApplicationCommandOptionType.Subcommand) {
-            fullCommand += ` ${prefix}${opt.name}`;
-            parseOptions(opt.options || [], '');
-          } else {
-            fullCommand += ` ${prefix}${opt.name}: ${opt.value}`;
+        function parseOptions(opts, prefix = '') {
+          for (const opt of opts) {
+            if (opt.type === ApplicationCommandOptionType.SubcommandGroup) {
+              fullCommand += ` ${prefix}${opt.name}`;
+              parseOptions(opt.options, `${opt.name} `);
+            } else if (opt.type === ApplicationCommandOptionType.Subcommand) {
+              fullCommand += ` ${prefix}${opt.name}`;
+              parseOptions(opt.options || [], '');
+            } else {
+              fullCommand += ` ${prefix}${opt.name}: ${opt.value}`;
+            }
           }
+        }
+
+        parseOptions(options);
+
+        const logEmbed = new EmbedBuilder()
+          .setTitle('🎭 Comando Utilizado')
+          .setColor('Blue')
+          .addFields(
+            { name: 'Usuário', value: `${user.tag} (\`${user.id}\`)`, inline: false },
+            { name: 'Comando', value: fullCommand, inline: false },
+            { name: 'Canal', value: interaction.channel ? `${interaction.channel.name}` : 'Desconhecido', inline: false },
+            { name: 'Horário', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
+            {
+              name: "Servidor",
+              value: interaction.guild ? `${interaction.guild.name} \`(${interaction.guild.id})\`` : "Desconhecido",
+              inline: false
+            }
+          );
+
+        await sendLogDirectApi(logChannelId, logEmbed);
+        await command.run(client, interaction);
+
+      } catch (e) {
+        console.error(e);
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({
+            content: '<:1000210943:1373427433570832475> | Inacreditável! Um comando tão inexistente quanto uma peça sem protagonista!',
+            ephemeral: true,
+          });
         }
       }
 
-      parseOptions(options);
+    } else if (interaction.isAutocomplete()) {
+      const command = client.commands.get(interaction.commandName);
+      if (command && typeof command.autocomplete === 'function') {
+        try {
+          await command.autocomplete(interaction);
+        } catch (e) {
+          console.error(`Erro no autocomplete de ${interaction.commandName}:`, e);
+        }
+      }
 
-      const logEmbed = new EmbedBuilder()
-        .setTitle('🎭 Comando Utilizado')
-        .setColor('Blue')
-        .addFields(
-          { name: 'Usuário', value: `${user.tag} (\`${user.id}\`)`, inline: false },
-          { name: 'Comando', value: fullCommand, inline: false },
-          { name: 'Canal', value: interaction.channel ? `${interaction.channel.name}` : 'Desconhecido', inline: false },
-          { name: 'Horário', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false },
-          {
-            name: "Servidor", value: interaction.guild ? `${interaction.guild.name} \`(${interaction.guild.id})\`` : "Desconhecido", inline: false }
-          
-        );
+    } else if (interaction.isModalSubmit()) {
+      if (interaction.customId.startsWith('modal_sorteio_')) {
+        return client.GerenciadorSorteio.tratarModal(interaction);
+      } else if (interaction.customId === 'uid') {
+        const nome = interaction.fields.getTextInputValue('1');
+        const uid = interaction.fields.getTextInputValue('2');
 
-      await sendLogDirectApi(logChannelId, logEmbed);
-      await command.run(furina, interaction);
+        const embed = new EmbedBuilder()
+          .setTitle('Verificação de Uid')
+          .setDescription(`Nome: ${nome}\nUid: ${uid}`)
+          .setColor('Orange');
 
-    } catch (e) {
-      console.error(e);
-      if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
-          content: '<:1000210943:1373427433570832475> | Inacreditável! Um comando tão inexistente quanto uma peça sem protagonista!',
+          content:
+            'O grandioso ritual de verificação foi iniciado! Seu UID foi enviado aos olhos atentos do destino. Agora, adicione o portador do UID **662543202** no jogo para que a confirmação possa ocorrer. A avaliação levará cerca de 24 horas, e você será informado se a bênção da verificação foi concedida… ou recusada. Para mais detalhes, dirija-se ao salão de suporte: https://discord.gg/aC5yqnXvmv',
           ephemeral: true,
         });
       }
+
+    } else if (interaction.isButton()) {
+      client.GerenciadorSorteio.tratarBotao(interaction);
     }
-
-  } else if (interaction.isAutocomplete()) {
-    const command = furina.commands.get(interaction.commandName);
-    if (command && typeof command.autocomplete === 'function') {
-      try {
-        await command.autocomplete(interaction);
-      } catch (e) {
-        console.error(`Erro no autocomplete de ${interaction.commandName}:`, e);
-      }
-    }
-
-  } else if (interaction.isModalSubmit()) {
-    if (interaction.customId.startsWith('modal_sorteio_')) {
-      return furina.GerenciadorSorteio.tratarModal(interaction);
-    } else if (interaction.customId === 'uid') {
-      let nome = interaction.fields.getTextInputValue('1');
-      let uid = interaction.fields.getTextInputValue('2');
-
-      const embed = new EmbedBuilder()
-        .setTitle('Verificação de Uid')
-        .setDescription(`Nome: ${nome}\nUid: ${uid}`)
-        .setColor('Orange');
-
-      await interaction.reply({
-        content:
-          'O grandioso ritual de verificação foi iniciado! Seu UID foi enviado aos olhos atentos do destino. Agora, adicione o portador do UID **662543202** no jogo para que a confirmação possa ocorrer. A avaliação levará cerca de 24 horas, e você será informado se a bênção da verificação foi concedida… ou recusada. Para mais detalhes, dirija-se ao salão de suporte: https://discord.gg/aC5yqnXvmv',
-        ephemeral: true,
-      });
-    }
-
-  } else if (interaction.isButton()) {
-    furina.GerenciadorSorteio.tratarBotao(interaction);
   }
-});
+};
