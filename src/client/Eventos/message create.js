@@ -8,30 +8,33 @@ module.exports = {
     const usuarioId = message.author.id;
     const servidorId = message.guild.id;
 
-    // XP automático ao falar
     await client.RankAventureiro.addXp(usuarioId, 5);
 
     try {
       const userdb = await client.userdb.findOne({ id: usuarioId });
+
+      if (servidorId === "1372911248936796231") {
+        if (userdb) {
+          userdb.primogemas += 100;
+          await userdb.save();
+        }
+      }
+
       if (userdb && userdb.premium && userdb.premium > Date.now()) {
         userdb.primogemas += 5;
         await userdb.save();
       }
-    } catch {
-      // falha silenciosa
-    }
+
+    } catch {}
 
     await client.GerenciadorSorteio.tratarMensagem(message);
-    // await client.GerenciadorSorteio.tratarRespostaCanal(message);
 
-    // Resposta ao mencionar o bot
     if (
       message.content === `<@${client.user.id}>` ||
       message.content === `<@!${client.user.id}>`
     ) {
       await message.reply({
-        content:
-          "🎭 Oh~ Você ousou mencionar a grandiosa Furina? Excelente escolha! Explore todo o meu esplendor no meu site de comandos!",
+        content: "🎭 Oh~ Você ousou mencionar a grandiosa Furina? Excelente escolha! Explore todo o meu esplendor no meu site de comandos!",
         components: [
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -44,7 +47,6 @@ module.exports = {
       return;
     }
 
-    // Mensagens automáticas por palavra-chave
     const messageWords = message.content.toLowerCase().match(/\b\w+\b/g);
 
     if (messageWords && messageWords.length > 0) {
