@@ -223,8 +223,7 @@ class GerenciadorSorteios {
 
           this.sorteiosPendentes.delete(interaction.user.id);
 
-          await interaction.followUp({ content: `Sorteio criado com sucesso! Use o botão para iniciar.`, ephemeral: false });
-
+          
           // Envia mensagem no canal com embed e botão iniciar
           const canal = interaction.guild.channels.cache.get(data.channelId);
           if (!canal) {
@@ -244,7 +243,7 @@ class GerenciadorSorteios {
 
           const row = new ActionRowBuilder().addComponents(btnIniciar);
 
-          canal.send({ content: `Id do sorteio: ${data.sorteioId}`, embeds: [embed], components: [row] }).catch(console.error);
+          await interaction.followUp({ content: `Id do sorteio: ${data.sorteioId}`, embeds: [embed], components: [row], ephemeral: false}).catch(console.error);
         });
 
         collectorBonus.on('end', collected => {

@@ -1,34 +1,50 @@
+const { EmbedBuilder } = require("discord.js");
+const personagens = require("./data/personagens");
+
 class Banner {
   constructor(client) {
     this.client = client;
     this.version = "1.0";
 
-    this.t5 = "Arlecchino";
-    this.t4 = ["Chevreuse", "LanYan", "Rosaria"];
-    this.t5_mochileiro = ["Mona", "Diluc", "Qiqi", "Jean", "Keqing"];
-    this.t4_mochileiro = ["Noelle", "Barbara", "Charlotte", "Chongyun", "Mika", "ShikanoinHeizou", "Layla", "Thoma"];
+    this.t5 = personagens.t5;
+    this.t4 = personagens.t4;
+    this.t5_mochileiro = personagens.t5_mochileiro;
+    this.t4_mochileiro = personagens.t4_mochileiro;
 
-    this.personagensElementos = {
-      Furina: "Hydro",
-      YaeMiko: "Electro",
-      ShikanoinHeizou: "Anemo",
-      Layla: "Cryo",
-      Thoma: "Pyro",
-      Arlecchino: "Pyro",
-      Chevreuse: "Pryo",
-      LanYan: "Anemo",
-      Rosaria: "Cryo",
-      Mona: "Hydro",
-      Diluc: "Pyro",
-      Qiqi: "Cryo",
-      Jean: "Anemo",
-      Keqing: "Electro",
-      Charlotte: "Cryo",
-      Chongyun: "Cryo",
-      Mika: "Electro",
-      Noelle: "Geo",
-      Barbara: "Hydro",
+    this.personagensElementos = {};
+    for (const [elemento, lista] of Object.entries(personagens.elementos)) {
+      for (const nome of lista) {
+        this.personagensElementos[nome] = elemento;
+      }
+    }
+
+    this.armas = {
+      t3: ["Espada do Viajante", "Lâmina Fria", "Arco de Caçador"],
+      t4: ["Espada do Sacrifício"],
+      t5: ["Espada Celestial"]
     };
+
+    this.armasMap = {};
+    let armaIdCounter = 1;
+    for (const raridade in this.armas) {
+      for (const armaNome of this.armas[raridade]) {
+        this.armasMap[armaNome] = armaIdCounter.toString().padStart(2, "0");
+        armaIdCounter++;
+      }
+    }
+
+    this.personagensMap = {};
+    let persoIdCounter = 1;
+    const personagensUnicos = new Set([
+      this.t5,
+      ...this.t4,
+      ...this.t5_mochileiro,
+      ...this.t4_mochileiro
+    ]);
+    for (const nome of personagensUnicos) {
+      this.personagensMap[nome] = persoIdCounter.toString().padStart(2, "0");
+      persoIdCounter++;
+    }
   }
 
   async push(pity, userId, value) {
@@ -46,7 +62,7 @@ class Banner {
         primogemas: 0,
         premium: 0,
         notificar: true,
-        conquistas: [],
+        conquistas: []
       });
     }
 
@@ -59,24 +75,17 @@ class Banner {
     const maxPity = isPremium ? 60 : 90;
 
     const resultado = [];
-    let totalGiros = 0;
-    let total5StarsObtidos = 0;
-    let total4StarsObtidos = 0;
-    let pity5Count = 0;
     let sequenciaRaros = 0;
     let maxSequenciaRaros = 0;
     let primeiroGiroDia5Star = false;
     let primeiroGiroDia = null;
-    let count4Stars = 0;
 
     for (let i = 0; i < value; i++) {
       pity.five++;
       pity.four++;
-      totalGiros++;
 
       const dataAtual = new Date();
-      const dataAtualString = dataAtual.toISOString().slice(0, 10); // YYYY-MM-DD
-
+      const dataAtualString = dataAtual.toISOString().slice(0, 10);
       if (!primeiroGiroDia) primeiroGiroDia = dataAtualString;
 
       const sorteio = Math.random() * 100;
@@ -88,43 +97,55 @@ class Banner {
 
       if (pity.five >= maxPity || sorteio < chance5) {
         pity.five = 0;
-        pity5Count++;
         sequenciaRaros++;
+
         if (sequenciaRaros > maxSequenciaRaros) maxSequenciaRaros = sequenciaRaros;
 
-        if (pity.garantia5 || Math.random() < 0.5) {
-          got = this.t5;
-          pity.garantia5 = false;
+        if (Math.random() < 0.5) {
+          if (pity.garantia5 || Math.random() < 0.5) {
+            got = this.t5;
+            pity.garantia5 = false;
+          } else {
+            got = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
+            pity.garantia5 = true;
+          }
         } else {
-          got = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
+          got = this.armas.t5[Math.floor(Math.random() * this.armas.t5.length)];
           pity.garantia5 = true;
         }
 
         raridade = 5;
-        resultado.push({ raridade, personagem: got });
-        total5StarsObtidos++;
+        const type = this.personagensElementos[got] ? "Personagem" : "Arma";
+        const id = type === "Personagem" ? this.personagensMap[got] : this.armasMap[got];
+        resultado.push({ type, raridade, nome: got, id });
 
-        // Check primeiro 5* do dia
         if (!primeiroGiroDia5Star && dataAtualString === primeiroGiroDia) {
           primeiroGiroDia5Star = true;
         }
 
         if (isPremium && Math.random() < 0.5 && i + 1 < value) {
-          let got2 = null;
-          if (pity.garantia5 || Math.random() < 0.5) {
+          let got2;
+          if (Math.random() < 0.5) {
             got2 = this.t5;
             pity.garantia5 = false;
           } else {
             got2 = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
             pity.garantia5 = true;
           }
-          resultado.push({ raridade: 5, personagem: got2 });
-          total5StarsObtidos++;
+
+          if (Math.random() < 0.5) {
+            got2 = this.armas.t5[Math.floor(Math.random() * this.armas.t5.length)];
+            pity.garantia5 = true;
+          }
+
+          const type2 = this.personagensElementos[got2] ? "Personagem" : "Arma";
+          const id2 = type2 === "Personagem" ? this.personagensMap[got2] : this.armasMap[got2];
+          resultado.push({ type: type2, raridade: 5, nome: got2, id: id2 });
+
           sequenciaRaros++;
           if (sequenciaRaros > maxSequenciaRaros) maxSequenciaRaros = sequenciaRaros;
+
           i++;
-          totalGiros++;
-          
         }
 
         continue;
@@ -132,27 +153,31 @@ class Banner {
 
       if (pity.four >= 10 || sorteio < 5.1) {
         pity.four = 0;
-
         sequenciaRaros = 0;
 
-        const isPromocional = Math.random() < 0.5;
-        if (isPromocional) {
-          got = this.t4[Math.floor(Math.random() * this.t4.length)];
+        if (Math.random() < 0.5) {
+          if (Math.random() < 0.5) {
+            got = this.t4[Math.floor(Math.random() * this.t4.length)];
+          } else {
+            got = this.t4_mochileiro[Math.floor(Math.random() * this.t4_mochileiro.length)];
+          }
         } else {
-          got = this.t4_mochileiro[Math.floor(Math.random() * this.t4_mochileiro.length)];
+          got = this.armas.t4[Math.floor(Math.random() * this.armas.t4.length)];
         }
 
         raridade = 4;
-        resultado.push({ raridade, personagem: got });
-        total4StarsObtidos++;
-        count4Stars++;
+        const type = this.personagensElementos[got] ? "Personagem" : "Arma";
+        const id = type === "Personagem" ? this.personagensMap[got] : this.armasMap[got];
+        resultado.push({ type, raridade, nome: got, id });
 
         continue;
       }
 
-      got = "Arma 3★";
+      got = this.armas.t3[Math.floor(Math.random() * this.armas.t3.length)];
       raridade = 3;
-      resultado.push({ raridade, personagem: got });
+      const type = "Arma";
+      const id = this.armasMap[got];
+      resultado.push({ type, raridade, nome: got, id });
 
       sequenciaRaros = 0;
     }
@@ -165,15 +190,15 @@ class Banner {
     userdb.gacha.pity.four = pity.four;
     userdb.gacha.pity.garantia5 = pity.garantia5;
 
-    resultado.forEach(({ personagem }) => {
-      if (personagem === "Arma 3★") return;
+    resultado.forEach(({ type, nome }) => {
+      if (type !== "Personagem") return;
 
-      const pIndex = userdb.personagens.findIndex(p => p.nome === personagem);
-      const elemento = this.personagensElementos[personagem] || "Anemo";
+      const pIndex = userdb.personagens.findIndex(p => p.nome === nome);
+      const elemento = this.personagensElementos[nome] || "Anemo";
 
       if (pIndex === -1) {
         userdb.personagens.push({
-          nome: personagem,
+          nome,
           c: 0,
           level: 0,
           ascensao: 0,
@@ -192,15 +217,15 @@ class Banner {
             bonusAnemo: 0,
             bonusGeo: 0,
             bonusDendro: 0,
-            bonusFisico: 0,
+            bonusFisico: 0
           },
-          elemento: elemento,
+          elemento,
           talentos: {
             ataqueNormal: 1,
             ataqueCarga: 1,
             habilidadeElemental: 1,
-            supremo: 1,
-          },
+            supremo: 1
+          }
         });
       } else {
         userdb.personagens[pIndex].c++;
@@ -214,58 +239,25 @@ class Banner {
 
     await userdb.save();
 
-    const tentarAdicionarConquista = async (conquistaId, categoria) => {
-      const jaTem = await this.client.conquistas.temConquista(userId, conquistaId);
-      if (!jaTem) {
-        await this.client.conquistas.addConquista(userId, conquistaId, categoria);
+    const channelId = "1392956504222597121";
+    const canalLog = await this.client.channels.fetch(channelId).catch(() => null);
 
-        if (userdb.notificar) {
-          try {
-            const user = await this.client.users.fetch(userId);
+    if (canalLog && canalLog.isTextBased()) {
+      const total5 = resultado.filter(i => i.raridade === 5).length;
+      const total4 = resultado.filter(i => i.raridade === 4).length;
+      const total3 = resultado.filter(i => i.raridade === 3).length;
 
-            const info = this.client.conquistasJson.find(x => String(x.id) === String(conquistaId)) || {};
-            const nome = info.nome || "Conquista";
-            const descricao = info.descricao || "Você desbloqueou uma nova conquista!";
+      const embed = new EmbedBuilder()
+        .setTitle("🎯 Resultado de Invocação")
+        .setDescription(`O usuário \`${userId}\` realizou **${value} giros** no banner.`)
+        .addFields(
+          { name: "⭐ Quantidade de Itens", value: `5★: ${total5}\n4★: ${total4}\n3★: ${total3}`, inline: true },
+          { name: "🎁 Itens Obtidos", value: resultado.map(r => `**${r.raridade}★** ${r.type} - ${r.nome}`).join("\n").slice(0, 1024) }
+        )
+        .setColor(0x5865F2)
+        .setTimestamp();
 
-            const embed = new this.client.discord.EmbedBuilder()
-              .setTitle("🌊✨ Conquista Desbloqueada!")
-              .setDescription(`Você conquistou: **${nome}**\n\n_${descricao}_`)
-              .setColor("#00d4ff")
-              .setFooter({ text: "Tribunal de Fontaine • Furina do Discord", iconURL: this.client.user.displayAvatarURL() })
-              .setTimestamp()
-              
-
-            await user.send({ embeds: [embed] }).catch(() => null);
-          } catch {
-            // Falha ao enviar DM
-          }
-        }
-      }
-    };
-
-    if (totalGiros >= 10) {
-      await tentarAdicionarConquista(1, "Gacha");
-    }
-    if (total5StarsObtidos >= 5) {
-      await tentarAdicionarConquista(2, "Gacha");
-    }
-    if (pity5Count >= 3) {
-      await tentarAdicionarConquista(3, "Gacha");
-    }
-    if (totalGiros >= 50) {
-      await tentarAdicionarConquista(4, "Gacha");
-    }
-    if (maxSequenciaRaros >= 2) {
-      await tentarAdicionarConquista(5, "Gacha");
-    }
-    if (primeiroGiroDia5Star) {
-      await tentarAdicionarConquista(6, "Gacha");
-    }
-    if (total4StarsObtidos >= 1) {
-      await tentarAdicionarConquista(7, "Gacha");
-    }
-    if (count4Stars >= 10) {
-      await tentarAdicionarConquista(8, "Gacha");
+      canalLog.send({ embeds: [embed] }).catch(() => null);
     }
 
     return resultado;
@@ -275,7 +267,7 @@ class Banner {
     return {
       t5: this.t5,
       t4: this.t4,
-      version: this.version,
+      version: this.version
     };
   }
 }

@@ -22,7 +22,9 @@ module.exports = {
   run: async (client, interaction) => {
     if (interaction.isChatInputCommand()) {
       try {
-        let serverdb = await client.serverdb.findOne({ serverId: interaction.guild.id });
+        let serverdb;
+        if (interaction.guild){
+    serverdb = await client.serverdb.findOne({ serverId: interaction.guild.id });
         if (!serverdb) {
           serverdb = new client.serverdb({ serverId: interaction.guild.id });
           await serverdb.save();
@@ -30,6 +32,7 @@ module.exports = {
 
         serverdb.usoDeComandos += 1;
         await serverdb.save();
+        }
 
         const command = client.commands.get(interaction.commandName);
         if (!command) return;

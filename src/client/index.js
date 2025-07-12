@@ -50,7 +50,7 @@ Furina.serverdb = require("./mongodb/servidores");
 Furina.MsgAuto = require("./mongodb/msg");
 
 Furina.website = "https://furina-do-discord.onrender.com";
-Furina.bannerAtual = "1.1";
+Furina.bannerAtual = "1.2";
 Furina.categories = fs.readdirSync("./src/client/Comandos");
 
 Furina.RankAventureiro = new RankAventureiro(Furina);

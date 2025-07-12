@@ -13,6 +13,8 @@ module.exports = {
   name: "elemental",
   description: "A justiça será lançada com fúria elemental! Escolha seu alvo — e que os céus decidam o resto!",
   type: 1,
+  integration_types: [0, 1],
+  contexts: [0, 1, 2],
   options: [
     {
       name: "usuário",

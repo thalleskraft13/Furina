@@ -106,7 +106,7 @@ module.exports = {
         }
 
         return interaction.editReply(
-          `✨ Para receber suas recompensas diárias de primogemas, visite o site mágico: ${client.website}/recompensas-diaria`
+          `✨ Para receber suas recompensas diárias de primogemas, visite o site mágico: ${client.website}/recompensas`
         );
       }
 

@@ -34,7 +34,7 @@ const personagemSchema = new Schema({
 const usuarioSchema = new Schema({
   id: { type: String, required: true }, // Discord User ID
   uid: { type: String, default: "0" },
-  notificar: { type: Boolean, default: true },
+  notificar: { type: Boolean, default: false },
   primogemas: { type: Number, default: 0 },
   mora: { type: Number, default: 0 },
   daily: { type: Number, default: 0 },
@@ -91,6 +91,25 @@ const usuarioSchema = new Schema({
         nv: { type: Number, default: 0 },
         quantidade: { type: Number, default: 0 },
         geoculus: { type: Number, default: 0 },
+      }
+    },
+    inazuma: {
+      reputacao: {
+        nv: { type: Number, default: 0 },
+        xp: { type: Number, default: 0 },
+      },
+      exploracao: {
+        bausPreciosos: { type: Number, default: 0 },
+        bausComuns: { type: Number, default: 0 },
+        bausLuxuosos: { type: Number, default: 0 },
+        time: { type: Number, default: 0 },
+        resgatado: { type: Boolean, default: true },
+        resgatar: { type: Boolean, default: false }
+      },
+      estatuaDosSetes: {
+        nv: { type: Number, default: 0 },
+        quantidade: { type: Number, default: 0 },
+        electroculus: { type: Number, default: 0 },
       }
     }
   },

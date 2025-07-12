@@ -44,7 +44,8 @@ class Exploracao {
     // Limites personalizados por região
     const limites = {
       mondstadt: 500,
-      liyue: 1000
+      liyue: 1000,
+      inazuma: 5000
     };
 
     const limiteMaximo = limites[regiao] || 500;
@@ -140,6 +141,14 @@ Volta sempre — o mundo ainda guarda segredos para ti!`;
 
   collectLiyue(userId) {
     return this.collectRegiao(userId, "liyue");
+  }
+
+  startInazuma(...args) {
+    return this.startRegiao(...args, "inazuma");
+  }
+
+  collectInazuma(userId) {
+    return this.collectRegiao(userId, "inazuma");
   }
 }
 

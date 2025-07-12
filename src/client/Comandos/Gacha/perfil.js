@@ -48,7 +48,7 @@ module.exports = {
         sobremim: userdb.perfil.sobremim,
         primogemas: userdb.primogemas,
         mora: userdb.mora,
-        conquistas: 42,
+        conquistas: userdb.conquistas.length,
         rankLevel: userdb.level.ar,
         xp: userdb.level.xp
       };
