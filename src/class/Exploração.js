@@ -118,6 +118,34 @@ Sábios ecos te chamarão quando a busca chegar ao fim.`;
 
     await userdb.save();
 
+    // --- INÍCIO DA INTEGRAÇÃO DA MISSÃO DE EXPLORAÇÃO NA GUILDA ---
+
+    if (userdb.guilda) {
+      const guilda = await this.furina.guilda.findOne({ tag: userdb.guilda });
+      if (guilda) {
+        // Encontrar missão do tipo 'exploracoes' que não esteja concluída
+        const missao = guilda.missoes.find(m => m.tipo === "exploracoes" && !m.concluida);
+
+        if (missao) {
+          missao.progresso += 1;
+
+          if (missao.progresso >= missao.objetivo) {
+            missao.progresso = missao.objetivo;
+            missao.concluida = true;
+
+            // Adicionar recompensa à guilda
+            guilda.mora += missao.recompensa.mora || 0;
+            guilda.primogemas += missao.recompensa.primogemas || 0;
+            guilda.xp += missao.recompensa.xp || 0;
+          }
+
+          await guilda.save();
+        }
+      }
+    }
+
+    // --- FIM DA INTEGRAÇÃO DA MISSÃO ---
+
     return `🌟 Tua expedição por ${regiao[0].toUpperCase() + regiao.slice(1)} rendeu frutos!  
 > **Baús Comuns:** ${comuns}  
 > **Preciosos:** ${preciosos}  

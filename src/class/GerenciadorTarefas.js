@@ -10,17 +10,11 @@ class GerenciadorTarefas {
 
   async iniciar() {
     await this.sincronizarCacheCompleta();
-
-    // Executa imediatamente as tarefas atrasadas (timestampExecucao <= agora)
     await this.executarTarefasAtrasadas();
-
     setInterval(() => this.verificarTarefas(), 10);
-
-    // Sincroniza cache com banco a cada 5 minutos, só com tarefas futuras
     setInterval(() => this.sincronizarCacheFutura(), 5 * 60 * 1000);
   }
 
-  // Recarrega todas as tarefas pendentes, independente da hora
   async sincronizarCacheCompleta() {
     try {
       this.cacheTarefas = await TarefaModel.find({
@@ -31,7 +25,6 @@ class GerenciadorTarefas {
     }
   }
 
-  // Recarrega só as tarefas pendentes futuras (próximas 5 min)
   async sincronizarCacheFutura() {
     try {
       const agora = new Date();
@@ -40,7 +33,6 @@ class GerenciadorTarefas {
         timestampExecucao: { $gte: agora },
       }).lean();
 
-      // Remove do cache tarefas antigas e atualiza só com futuras
       const futurasIds = futuras.map(t => t._id.toString());
       this.cacheTarefas = this.cacheTarefas.filter(t => futurasIds.includes(t._id.toString()));
       this.cacheTarefas.push(...futuras.filter(t => !this.cacheTarefas.find(c => c._id.toString() === t._id.toString())));
@@ -49,7 +41,6 @@ class GerenciadorTarefas {
     }
   }
 
-  // Executa tarefas atrasadas no startup
   async executarTarefasAtrasadas() {
     const agora = Date.now();
 
@@ -66,7 +57,6 @@ class GerenciadorTarefas {
 
         await this.enviarLogEmbed(tarefa, "✅ Tarefa Executada (Atrasada no Startup)", `A tarefa atrasada foi executada com sucesso.`, 0x57F287);
 
-        // Remove do cache para não executar duas vezes
         this.cacheTarefas = this.cacheTarefas.filter(t => t._id.toString() !== tarefa._id.toString());
       } catch (err) {
         console.error(`[TAREFAS] Erro ao executar tarefa atrasada ${tarefa._id}:`, err);
@@ -129,6 +119,27 @@ class GerenciadorTarefas {
           console.error(`[TAREFAS] Erro ao enviar lembrete no canal ${canalId}:`, e.message);
           await this.enviarLogErro(tarefa, e);
         }
+        break;
+      }
+
+      case 'removerMissoesGuilda': {
+        const { guildTag } = tarefa.dados;
+        if (!guildTag) {
+          console.warn(`[TAREFAS] removerMissoesGuilda sem guildTag na tarefa ${tarefa._id}`);
+          return;
+        }
+        const guilda = await this.client.guilda.findOne({ tag: guildTag });
+        if (!guilda) {
+          console.warn(`[TAREFAS] Guilda não encontrada para remover missões: ${guildTag}`);
+          return;
+        }
+        if (!Array.isArray(guilda.missoes) || guilda.missoes.length === 0) {
+          console.log(`[TAREFAS] Guilda ${guildTag} não possui missões para remover.`);
+          return;
+        }
+        guilda.missoes = [];
+        await guilda.save();
+        await this.enviarLogEmbed(tarefa, "🗑️ Missões Removidas", `As missões da guilda \`${guildTag}\` foram removidas após expirar o tempo.`, 0xFF0000);
         break;
       }
 

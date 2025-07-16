@@ -25,7 +25,31 @@ module.exports = {
         await userdb.save();
       }
 
-    } catch {}
+      if (!userdb || !userdb.guilda) return;
+
+      const guilda = await client.guilda.findOne({ tag: userdb.guilda });
+      if (!guilda) return;
+
+      const missaoMsg = guilda.missoes.find(
+        (m) => m.tipo === "mensagens" && !m.concluida
+      );
+      if (!missaoMsg) return;
+
+      missaoMsg.progresso += 1;
+
+      if (missaoMsg.progresso >= missaoMsg.objetivo) {
+        missaoMsg.concluida = true;
+        missaoMsg.progresso = missaoMsg.objetivo;
+
+        guilda.mora += missaoMsg.recompensa.mora || 0;
+        guilda.primogemas += missaoMsg.recompensa.primogemas || 0;
+        guilda.xp += missaoMsg.recompensa.xp || 0;
+      }
+
+      await guilda.save();
+    } catch (err) {
+      console.error("Erro ao atualizar missão de mensagens:", err);
+    }
 
     await client.GerenciadorSorteio.tratarMensagem(message);
 
@@ -34,7 +58,8 @@ module.exports = {
       message.content === `<@!${client.user.id}>`
     ) {
       await message.reply({
-        content: "🎭 Oh~ Você ousou mencionar a grandiosa Furina? Excelente escolha! Explore todo o meu esplendor no meu site de comandos!",
+        content:
+          "🎭 Oh~ Você ousou mencionar a grandiosa Furina? Excelente escolha! Explore todo o meu esplendor no meu site de comandos!",
         components: [
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()

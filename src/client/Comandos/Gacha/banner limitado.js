@@ -153,8 +153,13 @@ module.exports = {
               basePath = path.join(baseDir, "armas");
             }
           }
-          const filePath = path.join(basePath, `${p.nome}.png`);
+          if (p.nome === "Scaramouche"){
+          const filePath = path.join(basePath, `Scaramouche.png`);
           return loadImage(filePath);
+          } else {
+            const filePath = path.join(basePath, `${p.nome}.png`);
+          return loadImage(filePath);
+          }
         }
 
         const ordenado = [...resultado].sort((a, b) => {

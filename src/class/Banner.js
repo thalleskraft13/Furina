@@ -101,17 +101,21 @@ class Banner {
 
         if (sequenciaRaros > maxSequenciaRaros) maxSequenciaRaros = sequenciaRaros;
 
-        if (Math.random() < 0.5) {
-          if (pity.garantia5 || Math.random() < 0.5) {
+        if (pity.garantia5) {
+          got = this.t5;
+          pity.garantia5 = false;
+        } else {
+          if (Math.random() < 0.5) {
             got = this.t5;
             pity.garantia5 = false;
           } else {
-            got = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
+            if (Math.random() < 0.5) {
+              got = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
+            } else {
+              got = this.armas.t5[Math.floor(Math.random() * this.armas.t5.length)];
+            }
             pity.garantia5 = true;
           }
-        } else {
-          got = this.armas.t5[Math.floor(Math.random() * this.armas.t5.length)];
-          pity.garantia5 = true;
         }
 
         raridade = 5;
@@ -125,17 +129,21 @@ class Banner {
 
         if (isPremium && Math.random() < 0.5 && i + 1 < value) {
           let got2;
-          if (Math.random() < 0.5) {
+          if (pity.garantia5) {
             got2 = this.t5;
             pity.garantia5 = false;
           } else {
-            got2 = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
-            pity.garantia5 = true;
-          }
-
-          if (Math.random() < 0.5) {
-            got2 = this.armas.t5[Math.floor(Math.random() * this.armas.t5.length)];
-            pity.garantia5 = true;
+            if (Math.random() < 0.5) {
+              got2 = this.t5;
+              pity.garantia5 = false;
+            } else {
+              if (Math.random() < 0.5) {
+                got2 = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
+              } else {
+                got2 = this.armas.t5[Math.floor(Math.random() * this.armas.t5.length)];
+              }
+              pity.garantia5 = true;
+            }
           }
 
           const type2 = this.personagensElementos[got2] ? "Personagem" : "Arma";
@@ -239,26 +247,55 @@ class Banner {
 
     await userdb.save();
 
+    // Envio do log via REST com dados do usuário
     const channelId = "1392956504222597121";
-    const canalLog = await this.client.channels.fetch(channelId).catch(() => null);
+    const restMessenger = this.client.restMessenger;
 
-    if (canalLog && canalLog.isTextBased()) {
-      const total5 = resultado.filter(i => i.raridade === 5).length;
-      const total4 = resultado.filter(i => i.raridade === 4).length;
-      const total3 = resultado.filter(i => i.raridade === 3).length;
+    const total5 = resultado.filter(i => i.raridade === 5).length;
+    const total4 = resultado.filter(i => i.raridade === 4).length;
+    const total3 = resultado.filter(i => i.raridade === 3).length;
 
-      const embed = new EmbedBuilder()
-        .setTitle("🎯 Resultado de Invocação")
-        .setDescription(`O usuário \`${userId}\` realizou **${value} giros** no banner.`)
-        .addFields(
-          { name: "⭐ Quantidade de Itens", value: `5★: ${total5}\n4★: ${total4}\n3★: ${total3}`, inline: true },
-          { name: "🎁 Itens Obtidos", value: resultado.map(r => `**${r.raridade}★** ${r.type} - ${r.nome}`).join("\n").slice(0, 1024) }
-        )
-        .setColor(0x5865F2)
-        .setTimestamp();
+    let username = `Usuário ${userId}`;
+    let avatarURL = null;
 
-      canalLog.send({ embeds: [embed] }).catch(() => null);
+    try {
+      const user = await restMessenger.buscarUsuario(userId);
+      if (user) {
+        username = user.username || username;
+        if (user.avatar) {
+          avatarURL = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+        }
+      }
+    } catch (err) {
+      console.error("[REST] Falha ao buscar dados do usuário:", err);
     }
+
+    const embed = {
+      title: "🎯 Resultado de Invocação",
+      description: `**${username}** realizou **${value} giros** no banner.`,
+      color: 0x5865F2,
+      fields: [
+        {
+          name: "⭐ Quantidade de Itens",
+          value: `5★: ${total5}\n4★: ${total4}\n3★: ${total3}`,
+          inline: true
+        },
+        {
+          name: "🎁 Itens Obtidos",
+          value: resultado.map(r => `**${r.raridade}★** ${r.type} - ${r.nome}`).join("\n").slice(0, 1024)
+        }
+      ],
+      timestamp: new Date().toISOString()
+    };
+
+    if (avatarURL) {
+      embed.author = {
+        name: username,
+        icon_url: avatarURL
+      };
+    }
+
+    await restMessenger.enviar(channelId, { embeds: [embed] });
 
     return resultado;
   }

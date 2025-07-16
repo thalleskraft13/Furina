@@ -6,13 +6,16 @@ const personagemSchema = new Schema({
   level: { type: Number, default: 0 },
   ascensao: { type: Number, default: 0 },
   xp: { type: Number, default: 0 },
+
   atributos: {
     hp: { type: Number, default: 0 },
     atk: { type: Number, default: 0 },
     def: { type: Number, default: 0 },
+
     recargaEnergia: { type: Number, default: 100 },
     taxaCritica: { type: Number, default: 5 },
     danoCritico: { type: Number, default: 50 },
+
     bonusPyro: { type: Number, default: 0 },
     bonusHydro: { type: Number, default: 0 },
     bonusElectro: { type: Number, default: 0 },
@@ -22,38 +25,64 @@ const personagemSchema = new Schema({
     bonusDendro: { type: Number, default: 0 },
     bonusFisico: { type: Number, default: 0 },
   },
+
   elemento: { type: String, default: "Anemo" },
+
   talentos: {
     ataqueNormal: { type: Number, default: 1 },
     ataqueCarga: { type: Number, default: 1 },
     habilidadeElemental: { type: Number, default: 1 },
     supremo: { type: Number, default: 1 },
-  }
+  },
 });
 
 const usuarioSchema = new Schema({
   id: { type: String, required: true }, // Discord User ID
   uid: { type: String, default: "0" },
-  notificar: { type: Boolean, default: false },
+  notificar: { type: Boolean, default: true },
   primogemas: { type: Number, default: 0 },
   mora: { type: Number, default: 0 },
   daily: { type: Number, default: 0 },
   codigos: { type: Array, default: [] },
-  premium: { type: Number, default: 0 }, 
+  guilda: { type: String, default: "0" },
+
+  premium: { type: Number, default: 0 }, // timestamp ms até quando é premium
+
   conquistas: { type: Array, default: [] },
+
   level: {
     ar: { type: Number, default: 1 },
     xp: { type: Number, default: 0 },
-    xpMax: { type: Number, default: 375 }
+    xpMax: { type: Number, default: 375 },
   },
+
   gacha: {
     pity: {
       five: { type: Number, default: 0 },
       four: { type: Number, default: 0 },
-      garantia5: { type: Boolean, default: false }
-    }
+      garantia5: { type: Boolean, default: false },
+    },
   },
+
   personagens: { type: [personagemSchema], default: [] },
+
+  aviso: {
+    ativado: { type: Boolean, default: false },
+    texto: { type: String, default: "" },
+  },
+
+  blacklist: {
+    motivo: { type: String, default: "Não sei, não quero saber, e tenho raiva de quem saiba." },
+    equipe: {
+      id: { type: String, default: null },
+      username: { type: String, default: null },
+    },
+    tempo: {
+      ilimitado: { type: Boolean, default: false },
+      tempo: { type: Number, default: 0 },
+    },
+  },
+
   regioes: {
     mondstadt: {
       reputacao: {
@@ -66,14 +95,15 @@ const usuarioSchema = new Schema({
         bausLuxuosos: { type: Number, default: 0 },
         time: { type: Number, default: 0 },
         resgatado: { type: Boolean, default: true },
-        resgatar: { type: Boolean, default: false }
+        resgatar: { type: Boolean, default: false },
       },
       estatuaDosSetes: {
         nv: { type: Number, default: 0 },
         quantidade: { type: Number, default: 0 },
         anemoculus: { type: Number, default: 0 },
-      }
+      },
     },
+
     liyue: {
       reputacao: {
         nv: { type: Number, default: 0 },
@@ -85,14 +115,15 @@ const usuarioSchema = new Schema({
         bausLuxuosos: { type: Number, default: 0 },
         time: { type: Number, default: 0 },
         resgatado: { type: Boolean, default: true },
-        resgatar: { type: Boolean, default: false }
+        resgatar: { type: Boolean, default: false },
       },
       estatuaDosSetes: {
         nv: { type: Number, default: 0 },
         quantidade: { type: Number, default: 0 },
         geoculus: { type: Number, default: 0 },
-      }
+      },
     },
+
     inazuma: {
       reputacao: {
         nv: { type: Number, default: 0 },
@@ -104,19 +135,20 @@ const usuarioSchema = new Schema({
         bausLuxuosos: { type: Number, default: 0 },
         time: { type: Number, default: 0 },
         resgatado: { type: Boolean, default: true },
-        resgatar: { type: Boolean, default: false }
+        resgatar: { type: Boolean, default: false },
       },
       estatuaDosSetes: {
         nv: { type: Number, default: 0 },
         quantidade: { type: Number, default: 0 },
         electroculus: { type: Number, default: 0 },
-      }
-    }
+      },
+    },
   },
+
   perfil: {
     sobremim: { type: String, default: "Use o comando '/perfil sobremim' pra editar." },
-    tema: { type: String, default: "0" }
-  }
+    tema: { type: String, default: "0" },
+  },
 });
 
 module.exports = model("Usuarios", usuarioSchema);

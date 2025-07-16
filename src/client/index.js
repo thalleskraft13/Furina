@@ -12,6 +12,7 @@ const RankAventureiro = require("../class/RankAventureiro");
 const Banner = require("../class/Banner");
 const Exploracao = require("../class/Exploração");
 const Conquistas = require("../class/Conquistas");
+const GuildaManager = require("../class/guilda")
 
 const Furina = new Client({
   shards: getInfo().SHARD_LIST,
@@ -44,13 +45,15 @@ connectMongo();
 
 Furina.commands = new Collection();
 Furina.events = new Collection();
+Furina.convitesGuilda = new Collection();
 
 Furina.userdb = require("./mongodb/user");
 Furina.serverdb = require("./mongodb/servidores");
 Furina.MsgAuto = require("./mongodb/msg");
+Furina.guilda = require("./mongodb/guilda")
 
 Furina.website = "https://furina-do-discord.onrender.com";
-Furina.bannerAtual = "1.2";
+Furina.bannerAtual = "1.3";
 Furina.categories = fs.readdirSync("./src/client/Comandos");
 
 Furina.RankAventureiro = new RankAventureiro(Furina);
@@ -60,6 +63,7 @@ Furina.GerenciadorTarefas = new GerenciadorTarefas(Furina);
 Furina.GerenciadorSorteio = new GerenciadorSorteios(Furina, Furina.GerenciadorTarefas);
 Furina.restMessenger = new RestMessenger(process.env.token);
 Furina.conquistas = new Conquistas(Furina);
+Furina.GuildaManager = new GuildaManager(Furina);
 Furina.conquistasJson = require("../class/data/conquistas.js");
 
 ["event_handler", "slash_handler"].forEach((handler) => {
