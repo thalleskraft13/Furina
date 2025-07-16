@@ -200,8 +200,8 @@ let pity = 90;
       
       
 
-      const bannerURL = `attachment://${Furina.bannerAtual}.jpeg`;
-      const file = new AttachmentBuilder(`./src/img/banners/${Furina.bannerAtual}.jpeg`);
+      const bannerURL = "https://files.catbox.moe/dbw7nw.png" //`attachment://${Furina.bannerAtual}.jpeg`;
+      //const file = new AttachmentBuilder(`./src/img/banners/${Furina.bannerAtual}.jpeg`);
       const embed = new EmbedBuilder()
         .setTitle("**O palco estrelado desta temporada!**")
         .setImage(bannerURL)
@@ -213,7 +213,6 @@ let pity = 90;
       const responss = await interaction.editReply({
         content: `${interaction.user}`,
         embeds: [embed],
-        files: [file],
         components: [
           new ActionRowBuilder().addComponents(
             new ButtonBuilder().setLabel("1").setEmoji("<:1000211202:1373804510148821133>").setCustomId(`giros_1_${interaction.id}`).setStyle(ButtonStyle.Secondary),
