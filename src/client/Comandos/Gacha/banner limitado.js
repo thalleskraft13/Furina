@@ -8,6 +8,7 @@ const {
 } = require("discord.js");
 const { createCanvas, loadImage } = require("canvas");
 const path = require("path");
+const tempoPraUsar = [];
 
 const gifs = {
   "10tiro-t4": "https://files.catbox.moe/ejr418.gif",

@@ -109,11 +109,7 @@ class Banner {
             got = this.t5;
             pity.garantia5 = false;
           } else {
-            if (Math.random() < 0.5) {
-              got = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
-            } else {
-              got = this.armas.t5[Math.floor(Math.random() * this.armas.t5.length)];
-            }
+            got = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
             pity.garantia5 = true;
           }
         }
@@ -137,11 +133,7 @@ class Banner {
               got2 = this.t5;
               pity.garantia5 = false;
             } else {
-              if (Math.random() < 0.5) {
-                got2 = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
-              } else {
-                got2 = this.armas.t5[Math.floor(Math.random() * this.armas.t5.length)];
-              }
+              got2 = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
               pity.garantia5 = true;
             }
           }
@@ -247,7 +239,6 @@ class Banner {
 
     await userdb.save();
 
-    // Envio do log via REST com dados do usuário
     const channelId = "1392956504222597121";
     const restMessenger = this.client.restMessenger;
 
