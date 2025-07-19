@@ -11,22 +11,60 @@ module.exports = {
     await client.RankAventureiro.addXp(usuarioId, 5);
 
     try {
-      const userdb = await client.userdb.findOne({ id: usuarioId });
+      // Busca o usuário
+      let userdb = await client.userdb.findOne({ id: usuarioId });
 
+      // Se não existir, cria um novo documento
+      if (!userdb) {
+        userdb = new client.userdb({
+          id: usuarioId,
+          itens: []
+        });
+      }
+
+      // Garantir que 'itens' é um array
+      if (!Array.isArray(userdb.itens)) userdb.itens = [];
+
+      // Quantidade aleatória entre 20 e 50
+      const quantidadeAleatoria = Math.floor(Math.random() * 31) + 20;
+
+      // Procura índice do item "Material de Elevação"
+      const itemIndex = userdb.itens.findIndex(i => i.nome === "Material de Elevação");
+
+      if (itemIndex === -1) {
+        // Não tem o item, adiciona
+        userdb.itens.push({
+          nome: "Material de Elevação",
+          quantidade: quantidadeAleatoria
+        });
+      } else {
+        // Já tem, incrementa a quantidade
+        userdb.itens[itemIndex].quantidade = (userdb.itens[itemIndex].quantidade || 0) + quantidadeAleatoria;
+
+        // Marca o campo como modificado para Mongoose detectar
+        userdb.markModified('itens');
+      }
+
+      // Se for servidor específico, adiciona 100 primogemas
       if (servidorId === "1372911248936796231") {
-        if (userdb) {
-          userdb.primogemas += 100;
-          await userdb.save();
-        }
+        userdb.primogemas += 100;
       }
 
-      if (userdb && userdb.premium && userdb.premium > Date.now()) {
+      // Se premium ativo, adiciona 5 primogemas
+      if (userdb.premium && userdb.premium > Date.now()) {
         userdb.primogemas += 5;
-        await userdb.save();
       }
 
-      if (!userdb || !userdb.guilda) return;
+      // Salva o usuário com tratamento de erro
+      try {
+        await userdb.save();
+      } catch (err) {
+        console.error("Erro ao salvar usuário:", err);
+      }
 
+      if (!userdb.guilda) return;
+
+      // Continua sua lógica de guilda e missão
       const guilda = await client.guilda.findOne({ tag: userdb.guilda });
       if (!guilda) return;
 
@@ -47,6 +85,7 @@ module.exports = {
       }
 
       await guilda.save();
+
     } catch (err) {
       console.error("Erro ao atualizar missão de mensagens:", err);
     }

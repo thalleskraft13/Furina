@@ -8,7 +8,6 @@ const {
 } = require("discord.js");
 const { createCanvas, loadImage } = require("canvas");
 const path = require("path");
-const tempoPraUsar = [];
 
 const gifs = {
   "10tiro-t4": "https://files.catbox.moe/ejr418.gif",
@@ -24,10 +23,27 @@ module.exports = {
   type: 1,
   integration_types: [0, 1],
   contexts: [0, 1, 2],
+
+  // Aqui você adiciona a opção (choice) do comando, para o banner (1 ou 2)
+  options: [
+    {
+      name: "banner",
+      description: "Escolha o banner limitado (1 ou 2)",
+      type: 3, // STRING
+      required: true,
+      choices: [
+        { name: "Banner 1", value: "1" },
+        { name: "Banner 2", value: "2" }
+      ],
+    },
+  ],
+
   run: async (Furina, interaction) => {
     try {
-      let userdb = await Furina.userdb.findOne({ id: interaction.user.id });
+      // Pega o valor da escolha no comando
+      const bannerChoice = interaction.options.getString("banner") || "1";
 
+      let userdb = await Furina.userdb.findOne({ id: interaction.user.id });
       if (!userdb) {
         await new Furina.userdb({ id: interaction.user.id }).save();
         userdb = await Furina.userdb.findOne({ id: interaction.user.id });
@@ -188,21 +204,22 @@ module.exports = {
             ctx.drawImage(img, x + itemWidth * 0.05, y + itemHeight * 0.05, itemWidth * 0.9, itemHeight * 0.9);
           }
           drawStars(x, y - starAreaHeight * 0.7, p.raridade, itemWidth);
-          // Nome removido aqui
         }
 
         return canvas.toBuffer();
       }
 
-const premium = userdb.premium;
-const agora = Date.now();
-let pity = 90;
+      const premium = userdb.premium;
+      const agora = Date.now();
+      let pity = 90;
       if (premium > agora) pity = 60;
-      
-      
 
-      const bannerURL = "https://files.catbox.moe/dbw7nw.png" //`attachment://${Furina.bannerAtual}.jpeg`;
-      //const file = new AttachmentBuilder(`./src/img/banners/${Furina.bannerAtual}.jpeg`);
+      // Aqui formamos o bannerAtual com a escolha do banner: ex: "nomeBanner-1" ou "nomeBanner-2"
+      const bannerAtualEscolhido = `${Furina.bannerAtual}-${bannerChoice}`;
+
+      const bannerURL = `attachment://${bannerAtualEscolhido}.jpeg`;
+      const file = new AttachmentBuilder(`./src/img/banners/${bannerAtualEscolhido}.jpeg`);
+
       const embed = new EmbedBuilder()
         .setTitle("**O palco estrelado desta temporada!**")
         .setImage(bannerURL)
@@ -214,22 +231,38 @@ let pity = 90;
       const responss = await interaction.editReply({
         content: `${interaction.user}`,
         embeds: [embed],
+        files: [file],
         components: [
           new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setLabel("1").setEmoji("<:1000211202:1373804510148821133>").setCustomId(`giros_1_${interaction.id}`).setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder().setLabel("10").setEmoji("<:1000211202:1373804510148821133>").setCustomId(`giros_10_${interaction.id}`).setStyle(ButtonStyle.Secondary)
+            new ButtonBuilder()
+              .setLabel("1")
+              .setEmoji("<:1000211202:1373804510148821133>")
+              .setCustomId(`giros_1_${interaction.id}`)
+              .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
+              .setLabel("10")
+              .setEmoji("<:1000211202:1373804510148821133>")
+              .setCustomId(`giros_10_${interaction.id}`)
+              .setStyle(ButtonStyle.Secondary)
           )
         ]
       });
 
-      const collector = responss.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+      const collector = responss.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 60000
+      });
 
       collector.on("collect", async i => {
         if (i.customId === `giros_10_${interaction.id}`) {
           await i.deferUpdate();
-          if (userdb.primogemas < 1600) return i.followUp({ content: `Oh là là! Quanta ousadia… Pretender invocar as estrelas sem sequer 1600 primogemas?`, ephemeral: true });
+          if (userdb.primogemas < 1600)
+            return i.followUp({
+              content: `Oh là là! Quanta ousadia… Pretender invocar as estrelas sem sequer 1600 primogemas?`,
+              ephemeral: true
+            });
 
-          const resultado = await Furina.Banner.push(userdb.gacha.pity, interaction.user.id, 10);
+          const resultado = await Furina.Banner.push(userdb.gacha.pity, interaction.user.id, 10, `${bannerChoice}`);
           const t5 = resultado.some(p => p.raridade === 5);
           const gifUrl = t5 ? gifs["10tiro-t5"] : gifs["10tiro-t4"];
 
@@ -248,7 +281,11 @@ let pity = 90;
               embeds: [
                 new EmbedBuilder()
                   .setTitle("**Eis o desfecho desta rodada de desejos!**")
-                  .setDescription(resultado.map(p => `**${p.nome}** (${p.type}) - ${p.raridade}★`).join("\n"))
+                  .setDescription(
+                    resultado
+                      .map(p => `**${p.nome}** (${p.type}) - ${p.raridade}★`)
+                      .join("\n")
+                  )
                   .setColor("#D9B468")
                   .setImage("attachment://resultado_10tiros.png")
               ],
@@ -259,9 +296,13 @@ let pity = 90;
 
         if (i.customId === `giros_1_${interaction.id}`) {
           await i.deferUpdate();
-          if (userdb.primogemas < 160) return i.followUp({ content: `Oh là là! Uma única estrela custa ao menos 160 primogemas...`, ephemeral: true });
+          if (userdb.primogemas < 160)
+            return i.followUp({
+              content: `Oh là là! Uma única estrela custa ao menos 160 primogemas...`,
+              ephemeral: true
+            });
 
-          const resultado = await Furina.Banner.push(userdb.gacha.pity, interaction.user.id, 1);
+          const resultado = await Furina.Banner.push(userdb.gacha.pity, interaction.user.id, 1, `${bannerChoice}`);
           const res = resultado[0];
           const gifUrl = gifs[`1tiro-t${res.raridade}`];
 
@@ -275,20 +316,26 @@ let pity = 90;
             const embed = new EmbedBuilder()
               .setTitle("**A sorte lança seus dados!**")
               .setDescription(`Você obteve: **${res.nome}** (${res.type}) - ${res.raridade}★`)
-              .setColor(res.raridade === 5 ? "#D9B468" : res.raridade === 4 ? "#8A75D1" : "#A0A0A0")
+              .setColor(
+                res.raridade === 5 ? "#D9B468" : res.raridade === 4 ? "#8A75D1" : "#A0A0A0"
+              )
               .setImage(res.raridade < 4 ? null : `attachment://${res.nome}.png`);
 
             await i.editReply({
               embeds: [embed],
-              files: res.raridade < 4 ? [] : [new AttachmentBuilder(`./src/img/banners/personagens/${res.nome}.png`)]
+              files:
+                res.raridade < 4
+                  ? []
+                  : [new AttachmentBuilder(`./src/img/banners/personagens/${res.nome}.png`)]
             });
           }, 5000);
         }
       });
-
     } catch (e) {
       console.log(e);
-      return interaction.editReply(`❌ Oh là là! Algo deu errado ao executar o comando. Por favor, reporte ao servidor de suporte para que possamos trazer justiça a essa falha.\n\n\`\`\`\n${e}\n\`\`\``);
+      return interaction.editReply(
+        `❌ Oh là là! Algo deu errado ao executar o comando. Por favor, reporte ao servidor de suporte para que possamos trazer justiça a essa falha.\n\n\`\`\`\n${e}\n\`\`\``
+      );
     }
   }
 };

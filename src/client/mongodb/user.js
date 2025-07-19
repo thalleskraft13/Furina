@@ -46,7 +46,13 @@ const usuarioSchema = new Schema({
   codigos: { type: Array, default: [] },
   guilda: { type: String, default: "0" },
 
-  premium: { type: Number, default: 0 }, // timestamp ms até quando é premium
+  premium: { type: Number, default: 0 },
+  itens: { type: Array, default: [] },
+  equipe: { type: Array, default: [] },
+  abismo: {
+    camada: { type: Number, default: 1},
+    piso: { type: Number, default: 1 },
+  },
 
   conquistas: { type: Array, default: [] },
 

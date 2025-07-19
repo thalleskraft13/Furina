@@ -6,8 +6,8 @@ class Banner {
     this.client = client;
     this.version = "1.0";
 
-    this.t5 = personagens.t5;
-    this.t4 = personagens.t4;
+    this.t5 = personagens.t5; // Exemplo: ["Xilonen", "Furina"]
+    this.t4 = personagens.t4; // Exemplo: [["Beidou", "Yanfei", "Faruzan"], ["Mika", "Charlotte", "Chongyun"]]
     this.t5_mochileiro = personagens.t5_mochileiro;
     this.t4_mochileiro = personagens.t4_mochileiro;
 
@@ -36,8 +36,8 @@ class Banner {
     this.personagensMap = {};
     let persoIdCounter = 1;
     const personagensUnicos = new Set([
-      this.t5,
-      ...this.t4,
+      ...this.t5,
+      ...this.t4.flat(),
       ...this.t5_mochileiro,
       ...this.t4_mochileiro
     ]);
@@ -47,7 +47,7 @@ class Banner {
     }
   }
 
-  async push(pity, userId, value) {
+  async push(pity, userId, value, bannerId = "1") {
     if (!pity || typeof pity !== "object") pity = {};
     if (typeof pity.five !== "number") pity.five = 0;
     if (typeof pity.four !== "number") pity.four = 0;
@@ -73,12 +73,14 @@ class Banner {
     userdb.primogemas -= custo;
 
     const maxPity = isPremium ? 60 : 90;
-
     const resultado = [];
     let sequenciaRaros = 0;
     let maxSequenciaRaros = 0;
     let primeiroGiroDia5Star = false;
     let primeiroGiroDia = null;
+
+    // Índice do banner (0 para "1", 1 para "2")
+    const bannerIndex = bannerId === "2" ? 1 : 0;
 
     for (let i = 0; i < value; i++) {
       pity.five++;
@@ -102,11 +104,11 @@ class Banner {
         if (sequenciaRaros > maxSequenciaRaros) maxSequenciaRaros = sequenciaRaros;
 
         if (pity.garantia5) {
-          got = this.t5;
+          got = this.t5[bannerIndex];
           pity.garantia5 = false;
         } else {
           if (Math.random() < 0.5) {
-            got = this.t5;
+            got = this.t5[bannerIndex];
             pity.garantia5 = false;
           } else {
             got = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
@@ -126,11 +128,11 @@ class Banner {
         if (isPremium && Math.random() < 0.5 && i + 1 < value) {
           let got2;
           if (pity.garantia5) {
-            got2 = this.t5;
+            got2 = this.t5[bannerIndex];
             pity.garantia5 = false;
           } else {
             if (Math.random() < 0.5) {
-              got2 = this.t5;
+              got2 = this.t5[bannerIndex];
               pity.garantia5 = false;
             } else {
               got2 = this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
@@ -157,7 +159,8 @@ class Banner {
 
         if (Math.random() < 0.5) {
           if (Math.random() < 0.5) {
-            got = this.t4[Math.floor(Math.random() * this.t4.length)];
+            const t4list = this.t4[bannerIndex];
+            got = t4list[Math.floor(Math.random() * t4list.length)];
           } else {
             got = this.t4_mochileiro[Math.floor(Math.random() * this.t4_mochileiro.length)];
           }
