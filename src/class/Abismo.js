@@ -70,23 +70,17 @@ class Abismo {
 
   bonusNivelHabilidades(personagem, acao) {
     const bonusPorNivel = 0.05;
+    const atk = personagem.atributos.atk;
+    const talentos = personagem.talentos;
     switch (acao) {
       case "ataque_normal":
-        return (
-          personagem.talentos.ataqueNormal * bonusPorNivel * personagem.atributos.atk
-        );
+        return talentos.ataqueNormal * bonusPorNivel * atk;
       case "ataque_carga":
-        return (
-          personagem.talentos.ataqueCarga * bonusPorNivel * personagem.atributos.atk
-        );
+        return talentos.ataqueCarga * bonusPorNivel * atk;
       case "habilidade_elemental":
-        return (
-          personagem.talentos.habilidadeElemental * bonusPorNivel * personagem.atributos.atk
-        );
+        return talentos.habilidadeElemental * bonusPorNivel * atk;
       case "supremo":
-        return (
-          personagem.talentos.supremo * bonusPorNivel * personagem.atributos.atk
-        );
+        return talentos.supremo * bonusPorNivel * atk;
       default:
         return 0;
     }
@@ -94,8 +88,7 @@ class Abismo {
 
   aplicarBonusPorPapel(personagem, status, equipe, contexto = {}) {
     let novoStatus = { ...status };
-    const papel =
-      typeof personagem.papel === "string" ? personagem.papel.toUpperCase() : "";
+    const papel = (personagem.papel || "").toUpperCase();
 
     switch (papel) {
       case "HEALER":
@@ -107,11 +100,8 @@ class Abismo {
       case "SUPORTE":
         if (personagem.nome.toLowerCase() === "bennett") {
           const dpsAtkTotal = equipe
-            .filter(
-              (p) => typeof p.papel === "string" && p.papel.toUpperCase() === "DPS"
-            )
+            .filter(p => (p.papel || "").toUpperCase() === "DPS")
             .reduce((sum, p) => sum + p.atributos.atk, 0);
-
           novoStatus.danoTotal += personagem.atributos.atk * 0.15 * dpsAtkTotal;
         } else if (personagem.nome.toLowerCase() === "furina") {
           novoStatus.danoTotal += personagem.atributos.hp * 0.1;
@@ -119,13 +109,12 @@ class Abismo {
           novoStatus.profElementalBonus = (novoStatus.profElementalBonus || 0) + 0.1;
         }
         break;
-      case "DPS":
-        break;
     }
+
     return novoStatus;
   }
 
-  calcularReacao(elementoAtacante, elementoInimigo, profBonus = 0) {
+  calcularReacao(elementoA, elementoB, bonus = 0) {
     const reacoes = {
       Pyro: { Hydro: 1.5, Cryo: 2.0, Electro: 1.5, Dendro: 1.5 },
       Hydro: { Pyro: 2.0, Electro: 1.5, Cryo: 1.5 },
@@ -133,12 +122,11 @@ class Abismo {
       Electro: { Hydro: 2.0, Pyro: 1.5, Cryo: 1.5 },
       Dendro: { Hydro: 2.0, Pyro: 1.5 },
     };
-    let base = reacoes[elementoAtacante]?.[elementoInimigo] || 1.0;
-    return base + profBonus;
+    return (reacoes[elementoA]?.[elementoB] || 1.0) + bonus;
   }
 
   calculaDano(personagem, acao, inimigoElemento, equipe, contexto = {}, inimigoNivel = 0) {
-    let statusBase = {
+    let status = {
       atk: personagem.atributos.atk,
       taxaCritica: personagem.atributos.taxaCritica,
       danoCritico: personagem.atributos.danoCritico,
@@ -149,62 +137,40 @@ class Abismo {
       profElementalBonus: 0,
     };
 
-    let status = this.aplicarConstelacoes(personagem, statusBase, acao, contexto);
+    status = this.aplicarConstelacoes(personagem, status, acao, contexto);
     status.danoTotal += this.bonusNivelHabilidades(personagem, acao);
     status = this.aplicarBonusPorPapel(personagem, status, equipe, contexto);
 
-    let multiplicador;
-    switch (acao) {
-      case "ataque_normal":
-        multiplicador = 1.0;
-        break;
-      case "ataque_carga":
-        multiplicador = 1.5;
-        break;
-      case "habilidade_elemental":
-        multiplicador = 2.0;
-        break;
-      case "supremo":
-        multiplicador = 3.5;
-        break;
-      default:
-        multiplicador = 1.0;
-    }
+    const mult = {
+      ataque_normal: 1.0,
+      ataque_carga: 1.5,
+      habilidade_elemental: 2.0,
+      supremo: 3.5,
+    }[acao] || 1.0;
 
-    let danoBase = status.atk * multiplicador;
-    danoBase *= 1 + status.danoTotal / 100;
-
+    let dano = status.atk * mult * (1 + status.danoTotal / 100);
     if (inimigoNivel > personagem.nivel) {
       const diff = inimigoNivel - personagem.nivel;
       const reducao = Math.min(diff * 0.02, 0.5);
-      danoBase *= 1 - reducao;
+      dano *= 1 - reducao;
     }
-
-    const chanceCrit = Math.min(status.taxaCritica, 100);
-    const danoCriticoPercent = status.danoCritico;
 
     const chance = Math.random() * 100;
-    let critico = false;
-    if (chance <= chanceCrit) {
-      danoBase *= 1 + danoCriticoPercent / 100;
-      critico = true;
-    }
+    const critico = chance <= Math.min(status.taxaCritica, 100);
+    if (critico) dano *= 1 + status.danoCritico / 100;
 
-    let multiplicadorReacao = this.calcularReacao(
-      personagem.elemento,
-      inimigoElemento,
-      status.profElementalBonus
-    );
-    danoBase *= multiplicadorReacao;
+    const multReacao = this.calcularReacao(personagem.elemento, inimigoElemento, status.profElementalBonus);
+    dano *= multReacao;
 
     return {
-      dano: Math.floor(danoBase),
+      dano: Math.floor(dano),
       critico,
-      multiplicadorReacao,
+      multiplicadorReacao: multReacao,
       curaBonus: status.curaBonus,
       escudoBonus: status.escudoBonus,
-      papel: personagem.papel,
-      reducaoDanoPercent: inimigoNivel > personagem.nivel ? Math.round((1 - danoBase / (status.atk * multiplicador * (1 + status.danoTotal / 100) * multiplicadorReacao)) * 100) : 0,
+      reducaoDanoPercent: inimigoNivel > personagem.nivel
+        ? Math.round((1 - dano / (status.atk * mult * (1 + status.danoTotal / 100) * multReacao)) * 100)
+        : 0,
     };
   }
 
@@ -220,7 +186,7 @@ class Abismo {
     let camaraAtual = userData.abismo?.camara || 0;
     let pisoAtual = userData.abismo?.piso || 0;
 
-    if (!this.camaras[camaraAtual]) {
+    if (camaraAtual >= this.camaras.length) {
       return interaction.editReply("Parabéns! Você completou todas as câmaras do Abismo!");
     }
 
@@ -240,206 +206,146 @@ class Abismo {
       nivel: piso.nivel,
     };
 
-    const acaoOptions = [
-      { label: "Ataque Normal", value: "ataque_normal" },
-      { label: "Ataque Carregado", value: "ataque_carga" },
-      { label: "Habilidade Elemental", value: "habilidade_elemental" },
-      { label: "Supremo", value: "supremo" },
-    ];
-
     const selectPersonagem = new StringSelectMenuBuilder()
       .setCustomId("select_personagem")
       .setPlaceholder("Escolha o personagem")
-      .addOptions(
-        userData.equipe.map((nome) => ({
-          label: nome,
-          value: nome,
-        }))
-      );
+      .addOptions(userData.equipe.map(nome => ({ label: nome, value: nome })));
 
     const selectAcao = new StringSelectMenuBuilder()
       .setCustomId("select_acao")
       .setPlaceholder("Escolha a ação")
-      .addOptions(acaoOptions);
+      .addOptions([
+        { label: "Ataque Normal", value: "ataque_normal" },
+        { label: "Ataque Carregado", value: "ataque_carga" },
+        { label: "Habilidade Elemental", value: "habilidade_elemental" },
+        { label: "Supremo", value: "supremo" },
+      ]);
 
-    const botaoAtacar = new ButtonBuilder()
-      .setCustomId("botao_atacar")
-      .setLabel("Atacar")
-      .setStyle(ButtonStyle.Danger);
+    const botao = new ButtonBuilder().setCustomId("botao_atacar").setLabel("Atacar").setStyle(ButtonStyle.Danger);
 
     const rowPersonagem = new ActionRowBuilder().addComponents(selectPersonagem);
     const rowAcao = new ActionRowBuilder().addComponents(selectAcao);
-    const rowBotao = new ActionRowBuilder().addComponents(botaoAtacar);
+    const rowBotao = new ActionRowBuilder().addComponents(botao);
 
     let rotacao = [];
     let personagemEscolhido = userData.equipe[0];
     let acaoEscolhida = "ataque_normal";
 
-    const acharPersonagem = (nome) => {
-      return userData.personagens.find(
-        (p) => p.nome.toLowerCase() === nome.toLowerCase()
-      );
-    };
+    const acharPersonagem = nome =>
+      userData.personagens.find(p => p.nome.toLowerCase() === nome.toLowerCase());
 
-    const textoRotacao = () => {
-      if (rotacao.length === 0) return "Nenhuma rotação definida.";
-      return rotacao.map((r, i) => `${i + 1}. ${r.personagem} - ${r.acao}`).join("\n");
-    };
+    const textoRotacao = () =>
+      rotacao.length === 0 ? "Nenhuma rotação definida." :
+        rotacao.map((r, i) => `${i + 1}. ${r.personagem} - ${r.acao}`).join("\n");
 
     const mensagem = await interaction.editReply({
-      content: `Batalha iniciada!\nInimigo: ${inimigo.nome} (Nível ${inimigo.nivel})\nVida do inimigo: ${inimigo.vidaAtual}/${inimigo.vidaMax}\nRotação:\n${textoRotacao()}`,
+      content: `Batalha iniciada!\nInimigo: ${inimigo.nome} (Nível ${inimigo.nivel})\nVida: ${inimigo.vidaAtual}/${inimigo.vidaMax}\nRotação:\n${textoRotacao()}`,
       components: [rowPersonagem, rowAcao, rowBotao],
     });
 
     const collector = mensagem.createMessageComponentCollector({
       time: 180_000,
-      filter: (i) => i.user.id === userId,
+      filter: i => i.user.id === userId,
     });
 
-    collector.on("collect", async (i) => {
-      if (i.user.id !== userId) {
-        return i.reply({ content: "Esses controles não são para você!", ephemeral: true });
-      }
-
-      if (i.isStringSelectMenu()) {
-        if (i.customId === "select_personagem") {
-          personagemEscolhido = i.values[0];
-          if (!rotacao.find((r) => r.personagem === personagemEscolhido)) {
-            rotacao.push({ personagem: personagemEscolhido, acao: acaoEscolhida });
-          }
-        } else if (i.customId === "select_acao") {
-          acaoEscolhida = i.values[0];
-          const idx = rotacao.findIndex((r) => r.personagem === personagemEscolhido);
-          if (idx !== -1) {
-            rotacao[idx].acao = acaoEscolhida;
-          }
+    collector.on("collect", async i => {
+      if (i.customId === "select_personagem") {
+        personagemEscolhido = i.values[0];
+        if (!rotacao.find(r => r.personagem === personagemEscolhido)) {
+          rotacao.push({ personagem: personagemEscolhido, acao: acaoEscolhida });
         }
-
-        await i.update({
-          content: `Batalha iniciada!\nInimigo: ${inimigo.nome} (Nível ${inimigo.nivel})\nVida do inimigo: ${inimigo.vidaAtual}/${inimigo.vidaMax}\nRotação:\n${textoRotacao()}`,
-          components: [rowPersonagem, rowAcao, rowBotao],
-        });
-        return;
-      }
-
-      if (i.isButton() && i.customId === "botao_atacar") {
+      } else if (i.customId === "select_acao") {
+        acaoEscolhida = i.values[0];
+        const idx = rotacao.findIndex(r => r.personagem === personagemEscolhido);
+        if (idx !== -1) rotacao[idx].acao = acaoEscolhida;
+      } else if (i.customId === "botao_atacar") {
         if (rotacao.length === 0) {
-          return i.reply({ content: "A rotação está vazia! Selecione personagens e ações.", ephemeral: true });
+          return i.reply({ content: "A rotação está vazia!", ephemeral: true });
         }
 
-        let logCombate = [];
-
+        let log = [];
         for (const { personagem, acao } of rotacao) {
-          const personagemAtual = acharPersonagem(personagem);
-          if (!personagemAtual) {
-            logCombate.push(`${personagem}: personagem não encontrado.`);
-            continue;
-          }
+          const p = acharPersonagem(personagem);
+          if (!p || p.atributos.hp <= 0) continue;
 
-          if (personagemAtual.atributos.hp <= 0) {
-            await interaction.editReply({
-              content: `💀 ${personagem} morreu! Batalha encerrada.`,
-              components: [],
-              embeds: [],
-            });
-
-            for (const p of userData.personagens) {
-              p.atributos.hp = p.atributos.hpMax || 1000;
-            }
-            await Usuarios.updateOne({ id: userId }, { personagens: userData.personagens });
-            collector.stop("personagem-morto");
-            return;
-          }
-
-          const ultUsada = acao === "supremo";
-          const dpsAtkTotal = userData.personagens
-            .filter((p) => (p.papel?.toUpperCase() === "DPS"))
-            .reduce((sum, p) => sum + p.atributos.atk, 0);
-
-          const resultado = this.calculaDano(
-            personagemAtual,
-            acao,
-            inimigo.elemento,
-            userData.personagens,
-            { ultUsada, dpsAtkTotal },
-            inimigo.nivel
-          );
+          const resultado = this.calculaDano(p, acao, inimigo.elemento, userData.personagens, {
+            ultUsada: acao === "supremo",
+            dpsAtkTotal: userData.personagens.filter(x => (x.papel || "").toUpperCase() === "DPS").reduce((a, b) => a + b.atributos.atk, 0)
+          }, inimigo.nivel);
 
           inimigo.vidaAtual -= resultado.dano;
           if (inimigo.vidaAtual < 0) inimigo.vidaAtual = 0;
 
-          const critInimigo = Math.random() * 100 <= inimigo.taxaCritica;
-          let danoInimigo = inimigo.ataque;
-          if (critInimigo) danoInimigo *= 1 + inimigo.danoCritico / 100;
+          const critInimigo = Math.random() * 100 < inimigo.taxaCritica;
+          let danoInimigo = inimigo.ataque * (critInimigo ? 1 + inimigo.danoCritico / 100 : 1);
+          p.atributos.hp -= Math.floor(danoInimigo);
 
-          personagemAtual.atributos.hp -= danoInimigo;
-
-          const reducaoTexto = resultado.reducaoDanoPercent > 0 ? ` (Dano reduzido em ${resultado.reducaoDanoPercent}%)` : "";
-
-          logCombate.push(
-            `${personagemAtual.nome} (Nível ${personagemAtual.nivel}) usou ${acao} causando ${resultado.dano}${reducaoTexto}${resultado.critico ? " 💥 CRÍTICO" : ""}${resultado.multiplicadorReacao > 1 ? ` (Reação x${resultado.multiplicadorReacao.toFixed(2)})` : ""}`
-          );
-          logCombate.push(
-            `→ Recebeu dano inimigo: ${Math.floor(danoInimigo)}${critInimigo ? " 💥 CRÍTICO" : ""} | HP restante: ${Math.max(0, personagemAtual.atributos.hp)}`
-          );
+          log.push(`${p.nome} usou ${acao}, causando ${resultado.dano}${resultado.critico ? " 💥 CRÍTICO" : ""}`);
+          log.push(`→ Sofreu ${Math.floor(danoInimigo)} de dano | HP: ${Math.max(0, p.atributos.hp)}`);
 
           if (inimigo.vidaAtual <= 0) break;
         }
 
         const embed = new EmbedBuilder()
           .setTitle("Batalha no Abismo")
-          .setDescription(
-            `**Inimigo:** ${inimigo.nome} (Nível ${inimigo.nivel})\nVida: ${inimigo.vidaAtual}/${inimigo.vidaMax}\n\n${logCombate.join("\n")}`
-          )
+          .setDescription(`Inimigo: ${inimigo.nome}\nVida restante: ${inimigo.vidaAtual}/${inimigo.vidaMax}\n\n${log.join("\n")}`)
           .setColor(inimigo.vidaAtual <= 0 ? "Green" : "Yellow");
 
         await i.update({
-          content: `Batalha em andamento!\nVida do inimigo: ${inimigo.vidaAtual}/${inimigo.vidaMax}\nRotação:\n${textoRotacao()}`,
+          content: `Rotação:\n${textoRotacao()}`,
           embeds: [embed],
           components: [rowPersonagem, rowAcao, rowBotao],
         });
 
         if (inimigo.vidaAtual <= 0) {
           pisoAtual++;
-          if (pisoAtual >= this.camaras[camaraAtual].pisos.length) {
+          if (pisoAtual >= 3) {
             pisoAtual = 0;
-            camaraAtual++;
+            if (camaraAtual < 11) camaraAtual++;
+            else {
+              await i.followUp({ content: `🎊 Você completou todas as câmaras!`, ephemeral: true });
+              collector.stop("abismo-finalizado");
+              return;
+            }
           }
 
-          for (const p of userData.personagens) {
-            p.atributos.hp = p.atributos.hpMax || 1000;
-          }
+          for (const p of userData.personagens) p.atributos.hp = p.atributos.hpMax || 1000;
 
+          userData.abismo = { camara: camaraAtual, piso: pisoAtual };
           await Usuarios.updateOne(
             { id: userId },
             {
               personagens: userData.personagens,
               "abismo.camara": camaraAtual,
               "abismo.piso": pisoAtual,
-              "$inc": {
-                primogemas: 200
-              }
+              $inc: { primogemas: 200 }
             }
           );
 
           await i.followUp({
-            content: `🎉 Parabéns! Você derrotou o inimigo, avançou para a próxima etapa e ganhou 200 primogemas!\nCâmara: ${camaraAtual + 1}, Piso: ${pisoAtual + 1}`,
+            content: `🎉 Vitória! Você ganhou 200 primogemas.\nNova Câmara: ${camaraAtual + 1}, Piso: ${pisoAtual + 1}`,
             ephemeral: true,
           });
 
           collector.stop("inimigo-derrotado");
         }
       }
+
+      if (i.isStringSelectMenu()) {
+        await i.update({
+          content: `Inimigo: ${inimigo.nome} (Nível ${inimigo.nivel})\nVida: ${inimigo.vidaAtual}/${inimigo.vidaMax}\nRotação:\n${textoRotacao()}`,
+          components: [rowPersonagem, rowAcao, rowBotao],
+        });
+      }
     });
 
     collector.on("end", async (_collected, reason) => {
-      if (reason === "inimigo-derrotado" || reason === "personagem-morto") return;
-
-      await interaction.editReply({
-        content: `Batalha encerrada. Motivo: ${reason}`,
-        components: [],
-        embeds: [],
-      });
+      if (reason !== "inimigo-derrotado" && reason !== "abismo-finalizado") {
+        await interaction.editReply({
+          content: `Batalha encerrada. Motivo: ${reason}`,
+          components: [],
+        });
+      }
     });
   }
 }

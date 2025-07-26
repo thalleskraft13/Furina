@@ -122,7 +122,6 @@ module.exports = {
         .setStyle(ButtonStyle.Secondary);
 
       const buttonAvatar = new ButtonBuilder()
-        .setCustomId("baixar_avatar")
         .setLabel("📥 Baixar Avatar")
         .setStyle(ButtonStyle.Link)
         .setURL(targetUser.displayAvatarURL({ dynamic: true, size: 1024 }));

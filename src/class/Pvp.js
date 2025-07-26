@@ -28,28 +28,33 @@ class Pvp {
       return interaction.editReply({ embeds: [erroEmbed] });
     }
 
+    const customAceitar = `aceitar_duelo_${desafianteId}_${oponenteId}`;
+    const customRecusar = `recusar_duelo_${desafianteId}_${oponenteId}`;
+
     const confirmEmbed = new EmbedBuilder()
       .setTitle("🎭 O palco se arma!")
       .setDescription(`Oh, <@${oponenteId}>! Você foi desafiado por **${interaction.user.username}**!\nAceitará o chamado deste confronto? Ou fugirá dos holofotes?`)
       .setColor("Gold");
 
-    const aceitar = new ButtonBuilder().setCustomId("aceitar_duelo").setLabel("Aceitar").setStyle(ButtonStyle.Success);
-    const recusar = new ButtonBuilder().setCustomId("recusar_duelo").setLabel("Recusar").setStyle(ButtonStyle.Danger);
+    const aceitar = new ButtonBuilder().setCustomId(customAceitar).setLabel("Aceitar").setStyle(ButtonStyle.Success);
+    const recusar = new ButtonBuilder().setCustomId(customRecusar).setLabel("Recusar").setStyle(ButtonStyle.Danger);
     const rowConfirm = new ActionRowBuilder().addComponents(aceitar, recusar);
 
     await interaction.editReply({ embeds: [confirmEmbed], components: [rowConfirm] });
 
     const collector = interaction.channel.createMessageComponentCollector({
       time: 30000,
-      filter: i => i.user.id === oponenteId,
+      filter: i =>
+        i.user.id === oponenteId &&
+        (i.customId === customAceitar || i.customId === customRecusar),
     });
 
     collector.on("collect", async i => {
-      if (i.customId === "aceitar_duelo") {
-        await i.update({ content: "", embeds: [], components: [] });
-        this.iniciarBatalha(interaction, desafiante, oponente);
+      if (i.customId === customAceitar) {
+        await i.update({ content: "heh", embeds: [], components: [] });
         collector.stop();
-      } else if (i.customId === "recusar_duelo") {
+        this.iniciarBatalha(interaction, desafiante, oponente);
+      } else if (i.customId === customRecusar) {
         const recusa = new EmbedBuilder()
           .setTitle("🎭 Cortinas fechadas!")
           .setDescription("O duelo foi recusado. Que anticlímax, não achas?")
