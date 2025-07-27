@@ -50,6 +50,23 @@ module.exports = {
         userdb.primogemas += 100;
       }
 
+      if (servidorId === "1373420276737507489") {
+        const cargosDoUsuario = message.member.roles.cache;
+
+        const cargosComGemas = {
+          "1398997424885989491": 100,
+          "1398997375791665302": 300,
+          "1398997336004493333": 500,
+          "1398997459694391377": 70,
+        };
+
+        for (const [cargoId, gemas] of Object.entries(cargosComGemas)) {
+          if (cargosDoUsuario.has(cargoId)) {
+            userdb.primogemas += gemas;
+          }
+        }
+      }
+
       // Se premium ativo, adiciona 5 primogemas
       if (userdb.premium && userdb.premium > Date.now()) {
         userdb.primogemas += 5;
