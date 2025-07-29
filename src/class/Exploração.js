@@ -18,11 +18,38 @@ class Exploracao {
   }
 
   calcularRecompensas(duracaoHoras, regioesExtras = false) {
+    const hora = new Date().getHours();
+
+    let limiteBaus = 10;
+    if (hora >= 10) limiteBaus = 100;
+    else if (hora >= 5) limiteBaus = 60;
+    else if (hora >= 1) limiteBaus = 30;
+
     const fator = regioesExtras ? 1.25 : 1;
-    const comuns = Math.floor(duracaoHoras * 1.8 * fator);
-    const preciosos = Math.floor(duracaoHoras * 0.6 * fator);
-    const luxuosos = Math.floor(duracaoHoras * 0.2 * fator);
-    const primogemas = comuns * 2 + preciosos * 5 + luxuosos * 10;
+
+    let comuns = Math.floor(duracaoHoras * 1.8 * fator);
+    let preciosos = Math.floor(duracaoHoras * 0.6 * fator);
+    let luxuosos = Math.floor(duracaoHoras * 0.2 * fator);
+
+    let total = comuns + preciosos + luxuosos;
+
+    if (total > limiteBaus) {
+      const proporcao = limiteBaus / total;
+      comuns = Math.floor(comuns * proporcao);
+      preciosos = Math.floor(preciosos * proporcao);
+      luxuosos = Math.floor(luxuosos * proporcao);
+
+      total = comuns + preciosos + luxuosos;
+
+      const minimo = Math.floor(limiteBaus / 2);
+      if (total < minimo) {
+        const faltando = minimo - total;
+        comuns += faltando;
+        total = comuns + preciosos + luxuosos;
+      }
+    }
+
+    const primogemas = comuns * 5 + preciosos * 10 + luxuosos * 80;
 
     return { comuns, preciosos, luxuosos, primogemas };
   }
@@ -36,11 +63,7 @@ class Exploracao {
 
     const exploracao = userdb.regioes[regiao].exploracao;
 
-    const totalBaus =
-      exploracao.bausComuns +
-      exploracao.bausPreciosos +
-      exploracao.bausLuxuosos;
-
+    const totalBaus = exploracao.bausComuns + exploracao.bausPreciosos + exploracao.bausLuxuosos;
     const limites = {
       mondstadt: 500,
       liyue: 1000,
@@ -172,7 +195,6 @@ class Exploracao {
     return this.collectRegiao(userId, "inazuma");
   }
 
-  // 🆕 Sumeru
   startSumeru(...args) {
     return this.startRegiao(...args, "sumeru");
   }
