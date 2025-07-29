@@ -105,6 +105,7 @@ const usuarioSchema = new Schema({
         time: { type: Number, default: 0 },
         resgatado: { type: Boolean, default: true },
         resgatar: { type: Boolean, default: false },
+        inicio: { type: Number, default: 0}
       },
       estatuaDosSetes: {
         nv: { type: Number, default: 0 },
@@ -125,6 +126,7 @@ const usuarioSchema = new Schema({
         time: { type: Number, default: 0 },
         resgatado: { type: Boolean, default: true },
         resgatar: { type: Boolean, default: false },
+        inicio: { type: Number, default: 0}
       },
       estatuaDosSetes: {
         nv: { type: Number, default: 0 },
@@ -145,6 +147,7 @@ const usuarioSchema = new Schema({
         time: { type: Number, default: 0 },
         resgatado: { type: Boolean, default: true },
         resgatar: { type: Boolean, default: false },
+        inicio: { type: Number, default: 0}
       },
       estatuaDosSetes: {
         nv: { type: Number, default: 0 },
@@ -164,6 +167,7 @@ const usuarioSchema = new Schema({
         time: { type: Number, default: 0 },
         resgatado: { type: Boolean, default: true },
         resgatar: { type: Boolean, default: false },
+        inicio: { type: Number, default: 0}
       },
       estatuaDosSetes: {
         nv: { type: Number, default: 0 },

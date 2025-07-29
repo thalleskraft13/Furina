@@ -19,8 +19,7 @@ class Exploracao {
 
   calcularRecompensas(duracaoHoras, regioesExtras = false) {
     const hora = new Date().getHours();
-
-    let limiteBaus = 10;
+    let limiteBaus = 10; // padrão mínimo para 0h - 0:59
     if (hora >= 10) limiteBaus = 100;
     else if (hora >= 5) limiteBaus = 60;
     else if (hora >= 1) limiteBaus = 30;
@@ -33,22 +32,25 @@ class Exploracao {
 
     let total = comuns + preciosos + luxuosos;
 
-    if (total > limiteBaus) {
-      const proporcao = limiteBaus / total;
-      comuns = Math.floor(comuns * proporcao);
-      preciosos = Math.floor(preciosos * proporcao);
-      luxuosos = Math.floor(luxuosos * proporcao);
-
+    // Garante que o total seja no mínimo 50% do limite do horário
+    if (total < limiteBaus / 2) {
+      const deficit = Math.ceil(limiteBaus / 2) - total;
+      comuns += deficit; // adiciona deficit nos baús comuns
       total = comuns + preciosos + luxuosos;
-
-      const minimo = Math.floor(limiteBaus / 2);
-      if (total < minimo) {
-        const faltando = minimo - total;
-        comuns += faltando;
-        total = comuns + preciosos + luxuosos;
-      }
     }
 
+    // Garante que o total não ultrapasse o limite máximo
+    if (total > limiteBaus) {
+      const excedente = total - limiteBaus;
+      if (comuns >= excedente) comuns -= excedente;
+      else if (preciosos >= excedente) preciosos -= excedente;
+      else luxuosos = Math.max(0, luxuosos - excedente);
+    }
+
+    // Valores de gemas por tipo de baú
+    // Comum: 5 gemas
+    // Precioso: 10 gemas
+    // Luxuoso: 80 gemas
     const primogemas = comuns * 5 + preciosos * 10 + luxuosos * 80;
 
     return { comuns, preciosos, luxuosos, primogemas };
@@ -63,12 +65,16 @@ class Exploracao {
 
     const exploracao = userdb.regioes[regiao].exploracao;
 
-    const totalBaus = exploracao.bausComuns + exploracao.bausPreciosos + exploracao.bausLuxuosos;
+    const totalBaus =
+      exploracao.bausComuns +
+      exploracao.bausPreciosos +
+      exploracao.bausLuxuosos;
+
     const limites = {
       mondstadt: 500,
       liyue: 1000,
       inazuma: 5000,
-      sumeru: 7000
+      sumeru: 7000,
     };
 
     const limiteMaximo = limites[regiao] || 500;
@@ -91,6 +97,7 @@ class Exploracao {
 
     const duracaoMs = timeHours * 3600000;
     exploracao.time = agora + duracaoMs;
+    exploracao.inicio = agora;  // Salva o início da exploração
     exploracao.resgatar = true;
 
     await userdb.save();
@@ -122,9 +129,10 @@ class Exploracao {
     if (!exploracao.resgatar)
       return `Inicie uma nova exploração por ${regiao} usando \`/explorar ${regiao} iniciar\`.`;
 
+    // Corrigido: calcula duração pela diferença entre fim e início da exploração
     const duracaoHoras = Math.max(
       1,
-      Math.round((exploracao.time - (agora - 12 * 60 * 60 * 1000)) / 3600000)
+      Math.round((exploracao.time - exploracao.inicio) / 3600000)
     );
 
     const { comuns, preciosos, luxuosos, primogemas } = this.calcularRecompensas(
@@ -136,6 +144,7 @@ class Exploracao {
     exploracao.bausPreciosos += preciosos;
     exploracao.bausLuxuosos += luxuosos;
     exploracao.time = 0;
+    exploracao.inicio = 0;  // reseta início após coleta
     exploracao.resgatar = false;
     userdb.primogemas += primogemas;
 
@@ -145,7 +154,9 @@ class Exploracao {
     if (userdb.guilda) {
       const guilda = await this.furina.guilda.findOne({ tag: userdb.guilda });
       if (guilda) {
-        const missao = guilda.missoes.find(m => m.tipo === "exploracoes" && !m.concluida);
+        const missao = guilda.missoes.find(
+          (m) => m.tipo === "exploracoes" && !m.concluida
+        );
         if (missao) {
           missao.progresso += 1;
 
@@ -163,11 +174,11 @@ class Exploracao {
     }
 
     return `🌟 Tua expedição por ${regiao[0].toUpperCase() + regiao.slice(1)} rendeu frutos!\n` +
-           `> **Baús Comuns:** ${comuns}\n` +
-           `> **Preciosos:** ${preciosos}\n` +
-           `> **Luxuosos:** ${luxuosos}\n` +
-           `💎 Primogemas adquiridas: **${primogemas}**\n` +
-           `Volta sempre — o mundo ainda guarda segredos para ti!`;
+      `> **Baús Comuns:** ${comuns}\n` +
+      `> **Preciosos:** ${preciosos}\n` +
+      `> **Luxuosos:** ${luxuosos}\n` +
+      `💎 Primogemas adquiridas: **${primogemas}**\n` +
+      `Volta sempre — o mundo ainda guarda segredos para ti!`;
   }
 
   // Regiões existentes
@@ -195,6 +206,7 @@ class Exploracao {
     return this.collectRegiao(userId, "inazuma");
   }
 
+  // 🆕 Sumeru
   startSumeru(...args) {
     return this.startRegiao(...args, "sumeru");
   }
