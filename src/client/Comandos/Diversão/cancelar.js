@@ -11,6 +11,7 @@ module.exports = {
 
   run: async (Furina, interaction) => {
     try {
+      await interaction.deferReply();
       const motivosCancelamento = [
         "Por ousar ignorar uma cutscene emocionante.",
         "Por dizer que preferia a Arlecchino como Arconte.",

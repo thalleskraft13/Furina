@@ -50,15 +50,7 @@ module.exports = {
     if (conteudo === botMention || conteudo === botMentionAlt) {
       await message.reply({
         content:
-          "🎭 Oh~ Você ousou mencionar a grandiosa Furina? Excelente escolha! Explore todo o meu esplendor no meu site de comandos!",
-        components: [
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setLabel("Ver Comandos")
-              .setURL("https://furina.site")
-              .setStyle(ButtonStyle.Link)
-          )
-        ]
+          `🎭 Oh~ Você ousou mencionar a grandiosa Furina? Excelente escolha! Explore todo o meu esplendor no meu menu de comandos, </ajuda:${await client.obterComando("ajuda")}>`,
       });
       return;
     }

@@ -16,7 +16,7 @@ module.exports = {
 
     try {
   let option = interaction.options.getSubcommand()
-  
+      await interaction.deferReply({ ephemeral: true })  
   let ativadoOuNao;
     if (option === "ativar") ativadoOuNao = true;
     if (option === "desativar") ativadoOuNao = false;

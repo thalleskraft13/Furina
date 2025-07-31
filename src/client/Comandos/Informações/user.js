@@ -3,8 +3,6 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ComponentType,
-  PermissionsBitField,
 } = require("discord.js");
 
 const permissoesPTBR = {
@@ -48,35 +46,28 @@ const permissoesPTBR = {
   MANAGE_EVENTS: "Gerenciar eventos"
 };
 
-
 module.exports = {
   name: "usuario",
   description: "Mostra informações do usuário e membro no servidor. Pode mencionar outro usuário opcionalmente.",
   type: 1,
-
   options: [
     {
       name: "mencao",
       description: "Usuário para ver as informações (opcional)",
-      type: 6, // USER type
+      type: 6,
       required: false,
     },
   ],
 
   run: async (client, interaction) => {
     try {
-     // await interaction.deferReply({ ephemeral: false });
+      // deferReply() já foi chamado antes de chegar aqui
 
       const targetUser = interaction.options.getUser("mencao") || interaction.user;
       const guild = interaction.guild;
-
-      // Tentativa de pegar o membro no servidor (se for bot ou membro removido pode ser null)
       const member = await guild.members.fetch(targetUser.id).catch(() => null);
-
-      // Cor do maior cargo ou azul Furina padrão
       const corMaiorCargo = member?.roles.highest.color || 0x5865f2;
 
-      // Embed do usuário Discord
       const userEmbed = new EmbedBuilder()
         .setTitle("📌 Informações do Usuário (Discord)")
         .setThumbnail(targetUser.displayAvatarURL({ dynamic: true, size: 512 }))
@@ -89,19 +80,14 @@ module.exports = {
         .setFooter({ text: "Informações globais do Discord" });
 
       if (!member) {
-        // Se não é membro do servidor, só manda info do usuário
-        return interaction.editReply({
-          embeds: [userEmbed],
-        });
+        return interaction.editReply({ embeds: [userEmbed] });
       }
 
-      // Menor cargo (ignorando @everyone)
       const menorCargo = member.roles.cache
         .filter((r) => r.id !== guild.id)
         .sort((a, b) => a.position - b.position)
         .first();
 
-      // Embed do membro
       const memberEmbed = new EmbedBuilder()
         .setTitle("🏷️ Informações do Membro (Servidor)")
         .setThumbnail(member.displayAvatarURL({ dynamic: true, size: 512 }))
@@ -115,46 +101,13 @@ module.exports = {
         )
         .setFooter({ text: "Informações locais do servidor" });
 
-      // Botão Permissões
-      const button = new ButtonBuilder()
-        .setCustomId("ver_permissoes")
-        .setLabel("📋 Permissões")
-        .setStyle(ButtonStyle.Secondary);
-
-      const buttonAvatar = new ButtonBuilder()
-        .setLabel("📥 Baixar Avatar")
-        .setStyle(ButtonStyle.Link)
-        .setURL(targetUser.displayAvatarURL({ dynamic: true, size: 1024 }));
-
-
-      const row = new ActionRowBuilder().addComponents(button, buttonAvatar);
-
-      const reply = await interaction.editReply({
-        embeds: [userEmbed, memberEmbed],
-        components: [row],
-      });
-
-      const collector = reply.createMessageComponentCollector({
-        componentType: ComponentType.Button,
-        time: 30000,
-      });
-
-      collector.on("collect", async (btn) => {
-        if (btn.user.id !== interaction.user.id) {
-          return btn.reply({ content: "❌ Só quem usou o comando pode usar este botão!", ephemeral: true });
-        }
-        await btn.deferReply({ ephemeral: true })
+      // Aqui cria o ID do botão e registra callback que SÓ executa quando clicar no botão
+      const permissoesBtnId = client.CustomCollector.create(async (btnInteraction) => {
+        await btnInteraction.deferReply({ ephemeral: true });
 
         const permissoes = member.permissions.toArray();
-
-        // Traduz e formata
         const permissoesFormatadas = permissoes.length
-          ? permissoes
-              .map((p) => {
-                const pt = permissoesPTBR[p] || p; // fallback caso não tenha tradução
-                return `**\`${pt}\`**`;
-              })
-              .join("\n")
+          ? permissoes.map(p => `**\`${permissoesPTBR[p] || p}\`**`).join("\n")
           : "❌ Nenhuma permissão detectada.";
 
         const permEmbed = new EmbedBuilder()
@@ -163,26 +116,39 @@ module.exports = {
           .setColor("#5865F2")
           .setFooter({ text: "Essas permissões são do servidor atual." });
 
-        await btn.followUp({
-          embeds: [permEmbed],
-          ephemeral: true,
-        });
+        await btnInteraction.followUp({ embeds: [permEmbed], ephemeral: true });
+      }, {
+        type: "button",
+        checkAuthor: true,
+        authorId: interaction.user.id,
+        timeout: 30000,
       });
 
-      collector.on("end", () => {
-        reply.edit({ components: [] }).catch(() => {});
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(permissoesBtnId)
+          .setLabel("📋 Permissões")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setLabel("📥 Baixar Avatar")
+          .setStyle(ButtonStyle.Link)
+          .setURL(targetUser.displayAvatarURL({ dynamic: true, size: 1024 }))
+      );
+
+      await interaction.editReply({
+        embeds: [userEmbed, memberEmbed],
+        components: [row],
       });
+
+
+
     } catch (error) {
       console.error(error);
+      const content = `❌ Ocorreu um erro ao buscar os dados do usuário.\n\`\`\`\n${error.message || error}\n\`\`\``;
       if (interaction.deferred || interaction.replied) {
-        return interaction.editReply({
-          content: `❌ Ocorreu um erro ao buscar os dados do usuário.\n\`\`\`\n${error}\n\`\`\``,
-        });
+        return interaction.editReply({ content });
       } else {
-        return interaction.reply({
-          content: `❌ Ocorreu um erro ao buscar os dados do usuário.\n\`\`\`\n${error}\n\`\`\``,
-          ephemeral: true,
-        });
+        return interaction.reply({ content, ephemeral: true });
       }
     }
   },

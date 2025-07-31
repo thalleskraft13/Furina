@@ -15,6 +15,7 @@ const Exploracao = require("../class/Exploração");
 const Conquistas = require("../class/Conquistas");
 const GuildaManager = require("../class/guilda");
 const Pvp = require("../class/Pvp");
+const CustomCollector = require("../class/Collector")
 
 const Furina = new Client({
   shards: getInfo().SHARD_LIST,
@@ -70,6 +71,17 @@ Furina.GuildaManager = new GuildaManager(Furina);
 Furina.conquistasJson = require("../class/data/conquistas.js");
 Furina.Abismo = new Abismo(Furina);
 Furina.Pvp = new Pvp(Furina);
+Furina.CustomCollector = new CustomCollector(Furina);
+Furina.obterComando = async function (nome) {
+  try {
+    const comandos = await Furina.application.commands.fetch();
+    const comando = comandos.find(cmd => cmd.name === nome);
+    return comando ? comando.id : null;
+  } catch (err) {
+    console.error(`Erro ao obter o comando "${nome}":`, err);
+    return null;
+  }
+};
 
 ["event_handler", "slash_handler"].forEach((handler) => {
   require(`./handlers/${handler}`)(Furina);
@@ -112,7 +124,8 @@ const canalLogsStatusId = "1398389204421185596"; // novo canal para status e sha
 
   
 
-Furina.once("ready", () => {
+Furina.once("ready",async() => {
+  
   const statusList = [
     [
       "O julgamento está prestes a começar~",

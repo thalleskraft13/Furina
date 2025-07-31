@@ -41,7 +41,8 @@ module.exports = {
   run: async (client, interaction) => {
     try {
       const subcommand = interaction.options.getSubcommand();
-
+      await interaction.deferReply();
+      
       if (subcommand === "ver") {
         const user = interaction.options.getUser("usuário") || interaction.user;
 

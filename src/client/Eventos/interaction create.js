@@ -102,7 +102,7 @@ module.exports = {
         const command = client.commands.get(interaction.commandName);
         if (!command) return;
 
-        await interaction.deferReply().catch(() => {});
+       // await interaction.deferReply().catch(() => {});
         await client.RankAventureiro.addXp(interaction.user.id, 10);
 
         const options = interaction.options.data;
@@ -249,7 +249,7 @@ module.exports = {
         }
 
         if (interaction.isButton()) {
-          await client.GerenciadorSorteio.tratarBotao(interaction);
+       //   await client.GerenciadorSorteio.tratarBotao(interaction);
         }
 
         if (user?.aviso?.ativado && user.aviso.texto) {

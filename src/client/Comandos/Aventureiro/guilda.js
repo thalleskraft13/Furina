@@ -135,9 +135,10 @@ module.exports = {
   },
 
   run: async (client, interaction) => {
+    await interaction.deferReply();
     const sub = interaction.options.getSubcommand();
     const autorId = interaction.user.id;
-
+    return await interaction.editReply("Desativado até a próxima atualizações...");
     if (sub === 'convidar') {
       const user = interaction.options.getUser('usuario');
       return client.GuildaManager

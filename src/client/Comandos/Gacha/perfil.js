@@ -30,7 +30,8 @@ module.exports = {
   run: async (client, interaction) => {
     try {
   if (interaction.options.getSubcommand() === "ver") {
-     
+    await interaction.deferReply();
+    
       let user = interaction.options.getUser("usuario") || interaction.user;
 
       let userdb = await client.userdb.findOne({ id: user.id });
@@ -66,7 +67,7 @@ module.exports = {
       })
       
     } else if (interaction.options.getSubcommand() === "sobremim"){
-
+    await interaction.deferReply({ ephemeral: true })
 
     let novoSobremim = interaction.options.getString("texto");
 

@@ -5,6 +5,7 @@ module.exports = {
 
   run: async (client, interaction) => {
     try {
+      await interaction.deferReply();
       const destinos = [
         `O destino sussurra… ${interaction.user}, você será o futuro Arconte de uma vila esquecida por todos — até mesmo por Teyvat.`,
         `As estrelas decidiram! ${interaction.user}, você será um slime com consciência e grandes sonhos.`,

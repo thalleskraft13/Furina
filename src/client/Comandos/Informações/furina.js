@@ -46,6 +46,7 @@ module.exports = {
     try {
       const subcmd = interaction.options.getSubcommand();
 
+      await interaction.deferReply();
       if (subcmd === "8ball") {
         const respostas = [
           "Ah, claro, porque o universo gira só para você, não é mesmo?",

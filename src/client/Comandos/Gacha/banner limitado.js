@@ -42,7 +42,8 @@ module.exports = {
     try {
       // Pega o valor da escolha no comando
       const bannerChoice = interaction.options.getString("banner") || "1";
-
+      await interaction.deferReply();
+      
       let userdb = await Furina.userdb.findOne({ id: interaction.user.id });
       if (!userdb) {
         await new Furina.userdb({ id: interaction.user.id }).save();
@@ -209,14 +210,14 @@ module.exports = {
         return canvas.toBuffer();
       }
 
+
+      
       const premium = userdb.premium;
       const agora = Date.now();
       let pity = 90;
       if (premium > agora) pity = 60;
 
-      // Aqui formamos o bannerAtual com a escolha do banner: ex: "nomeBanner-1" ou "nomeBanner-2"
       const bannerAtualEscolhido = `${Furina.bannerAtual}-${bannerChoice}`;
-
       const bannerURL = `attachment://${bannerAtualEscolhido}.jpeg`;
       const file = new AttachmentBuilder(`./src/img/banners/${bannerAtualEscolhido}.jpeg`);
 
@@ -224,118 +225,163 @@ module.exports = {
         .setTitle("**O palco estrelado desta temporada!**")
         .setImage(bannerURL)
         .setFooter({
-          text: `Pity: ${userdb.gacha.pity.five}/${pity} | Garantia: ${userdb.gacha.pity.garantia5 ? "Sim" : "Não"}`
+          text: `Pity: ${userdb.gacha.pity.five}/${pity} | Garantia: ${
+            userdb.gacha.pity.garantia5 ? "Sim" : "Não"
+          }`,
         })
         .setColor("#3E91CC");
 
-      const responss = await interaction.editReply({
+      // Cria IDs exclusivos para os botões, usando client.CustomCollector
+      const btnId1 = Furina.CustomCollector.create(async (btnInt) => {
+        await btnInt.deferUpdate();
+
+        if (btnInt.user.id !== interaction.user.id)
+          return btnInt.followUp({
+            content: "❌ Apenas quem executou o comando pode usar estes botões.",
+            ephemeral: true,
+          });
+
+        if (userdb.primogemas < 160)
+          return btnInt.followUp({
+            content:
+              "Oh là là! Uma única estrela custa ao menos 160 primogemas...",
+            ephemeral: true,
+          });
+
+        const resultado = await Furina.Banner.push(
+          userdb.gacha.pity,
+          interaction.user.id,
+          1,
+          bannerChoice
+        );
+        const res = resultado[0];
+        const gifUrl = gifs[`1tiro-t${res.raridade}`];
+
+        await btnInt.editReply({
+          embeds: [new EmbedBuilder().setImage(gifUrl)],
+          components: [],
+          files: [],
+        });
+
+        setTimeout(async () => {
+          const embed = new EmbedBuilder()
+            .setTitle("**A sorte lança seus dados!**")
+            .setDescription(
+              `Você obteve: **${res.nome}** (${res.type}) - ${res.raridade}★`
+            )
+            .setColor(
+              res.raridade === 5 ? "#D9B468" : res.raridade === 4 ? "#8A75D1" : "#A0A0A0"
+            )
+            .setImage(
+              res.raridade < 4 ? null : `attachment://${res.nome}.png`
+            );
+
+          await btnInt.editReply({
+            embeds: [embed],
+            files:
+              res.raridade < 4
+                ? []
+                : [
+                    new AttachmentBuilder(
+                      `./src/img/banners/personagens/${res.nome}.png`
+                    ),
+                  ],
+          });
+        }, 5000);
+      }, {
+        type: "button",
+        checkAuthor: true,
+        authorId: interaction.user.id,
+        timeout: 60000,
+      });
+
+      const btnId10 = Furina.CustomCollector.create(async (btnInt) => {
+        await btnInt.deferUpdate();
+
+        if (btnInt.user.id !== interaction.user.id)
+          return btnInt.followUp({
+            content: "❌ Apenas quem executou o comando pode usar estes botões.",
+            ephemeral: true,
+          });
+
+        if (userdb.primogemas < 1600)
+          return btnInt.followUp({
+            content:
+              "Oh là là! Quanta ousadia… Pretender invocar as estrelas sem sequer 1600 primogemas?",
+            ephemeral: true,
+          });
+
+        const resultado = await Furina.Banner.push(
+          userdb.gacha.pity,
+          interaction.user.id,
+          10,
+          bannerChoice
+        );
+        const t5 = resultado.some((p) => p.raridade === 5);
+        const gifUrl = t5 ? gifs["10tiro-t5"] : gifs["10tiro-t4"];
+
+        await btnInt.editReply({
+          embeds: [new EmbedBuilder().setImage(gifUrl)],
+          components: [],
+          files: [],
+        });
+
+        setTimeout(async () => {
+          const buffer = await gerarImagemBanner(resultado, 10);
+          const attachment = new AttachmentBuilder(buffer, {
+            name: "resultado_10tiros.png",
+          });
+
+          await btnInt.editReply({
+            content: `${interaction.user}`,
+            embeds: [
+              new EmbedBuilder()
+                .setTitle("**Eis o desfecho desta rodada de desejos!**")
+                .setDescription(
+                  resultado
+                    .map((p) => `**${p.nome}** (${p.type}) - ${p.raridade}★`)
+                    .join("\n")
+                )
+                .setColor("#D9B468")
+                .setImage("attachment://resultado_10tiros.png"),
+            ],
+            files: [attachment],
+          });
+        }, 7000);
+      }, {
+        type: "button",
+        checkAuthor: true,
+        authorId: interaction.user.id,
+        timeout: 60000,
+      });
+
+      // Monta os botões com os customIds gerados
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setLabel("1")
+          .setEmoji("<:1000211202:1373804510148821133>")
+          .setCustomId(btnId1)
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setLabel("10")
+          .setEmoji("<:1000211202:1373804510148821133>")
+          .setCustomId(btnId10)
+          .setStyle(ButtonStyle.Secondary)
+      );
+
+      await interaction.editReply({
         content: `${interaction.user}`,
         embeds: [embed],
         files: [file],
-        components: [
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setLabel("1")
-              .setEmoji("<:1000211202:1373804510148821133>")
-              .setCustomId(`giros_1_${interaction.id}`)
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setLabel("10")
-              .setEmoji("<:1000211202:1373804510148821133>")
-              .setCustomId(`giros_10_${interaction.id}`)
-              .setStyle(ButtonStyle.Secondary)
-          )
-        ]
+        components: [row],
       });
 
-      const collector = responss.createMessageComponentCollector({
-        componentType: ComponentType.Button,
-        time: 60000
-      });
-
-      collector.on("collect", async i => {
-        if (i.customId === `giros_10_${interaction.id}`) {
-          await i.deferUpdate();
-          if (userdb.primogemas < 1600)
-            return i.followUp({
-              content: `Oh là là! Quanta ousadia… Pretender invocar as estrelas sem sequer 1600 primogemas?`,
-              ephemeral: true
-            });
-
-          const resultado = await Furina.Banner.push(userdb.gacha.pity, interaction.user.id, 10, `${bannerChoice}`);
-          const t5 = resultado.some(p => p.raridade === 5);
-          const gifUrl = t5 ? gifs["10tiro-t5"] : gifs["10tiro-t4"];
-
-          await i.editReply({
-            embeds: [new EmbedBuilder().setImage(gifUrl)],
-            components: [],
-            files: []
-          });
-
-          setTimeout(async () => {
-            const buffer = await gerarImagemBanner(resultado, 10);
-            const attachment = new AttachmentBuilder(buffer, { name: "resultado_10tiros.png" });
-
-            await i.editReply({
-              content: `${interaction.user}`,
-              embeds: [
-                new EmbedBuilder()
-                  .setTitle("**Eis o desfecho desta rodada de desejos!**")
-                  .setDescription(
-                    resultado
-                      .map(p => `**${p.nome}** (${p.type}) - ${p.raridade}★`)
-                      .join("\n")
-                  )
-                  .setColor("#D9B468")
-                  .setImage("attachment://resultado_10tiros.png")
-              ],
-              files: [attachment]
-            });
-          }, 7000);
-        }
-
-        if (i.customId === `giros_1_${interaction.id}`) {
-          await i.deferUpdate();
-          if (userdb.primogemas < 160)
-            return i.followUp({
-              content: `Oh là là! Uma única estrela custa ao menos 160 primogemas...`,
-              ephemeral: true
-            });
-
-          const resultado = await Furina.Banner.push(userdb.gacha.pity, interaction.user.id, 1, `${bannerChoice}`);
-          const res = resultado[0];
-          const gifUrl = gifs[`1tiro-t${res.raridade}`];
-
-          await i.editReply({
-            embeds: [new EmbedBuilder().setImage(gifUrl)],
-            components: [],
-            files: []
-          });
-
-          setTimeout(async () => {
-            const embed = new EmbedBuilder()
-              .setTitle("**A sorte lança seus dados!**")
-              .setDescription(`Você obteve: **${res.nome}** (${res.type}) - ${res.raridade}★`)
-              .setColor(
-                res.raridade === 5 ? "#D9B468" : res.raridade === 4 ? "#8A75D1" : "#A0A0A0"
-              )
-              .setImage(res.raridade < 4 ? null : `attachment://${res.nome}.png`);
-
-            await i.editReply({
-              embeds: [embed],
-              files:
-                res.raridade < 4
-                  ? []
-                  : [new AttachmentBuilder(`./src/img/banners/personagens/${res.nome}.png`)]
-            });
-          }, 5000);
-        }
-      });
+      
     } catch (e) {
-      console.log(e);
+      console.error(e);
       return interaction.editReply(
-        `❌ Oh là là! Algo deu errado ao executar o comando. Por favor, reporte ao servidor de suporte para que possamos trazer justiça a essa falha.\n\n\`\`\`\n${e}\n\`\`\``
+        `❌ Oh là là! Algo deu errado ao executar o comando. Por favor, reporte ao servidor de suporte.\n\n\`\`\`\n${e}\n\`\`\``
       );
     }
-  }
+  },
 };

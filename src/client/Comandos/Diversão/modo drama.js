@@ -4,6 +4,7 @@ description: "Transforme qualquer momento banal em um espetáculo digno da Óper
 type: 1,
 run: async (client, interaction) => {
 try {
+  await interaction.deferReply();
 const dramaMode = [
 `Oh, céus estrelados! ${interaction.user} ousou respirar… que audácia sem igual!`,
 `As cortinas se abrem! ${interaction.user} digitou. E assim, um novo ato da tragédia divina começa.`,

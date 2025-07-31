@@ -28,27 +28,10 @@ module.exports = {
   run: async (client, interaction) => {
     try {
       let cmd = interaction.options.getSubcommand();
+      
 
       if (cmd === "salvar") {
-        let msg = await interaction.editReply({
-          content: `Ah, meu caro! Vejo que ainda não há um UID gravado em seus registros. Salve-o agora para que a magia possa prosseguir!`,
-          components: [
-            new ActionRowBuilder().addComponents(
-              new ButtonBuilder()
-                .setLabel("Enviar Uid")
-                .setCustomId("enviar-uid-" + interaction.user.id)
-                .setStyle(ButtonStyle.Secondary)
-            ),
-          ],
-        });
-
-        const collector = msg.createMessageComponentCollector({
-          componentType: ComponentType.Button,
-          time: 40000,
-        });
-
-        collector.on("collect", async (i) => {
-          if (i.customId !== "enviar-uid-" + interaction.user.id) return;
+        
 
           const modal = new ModalBuilder()
             .setCustomId("uid")
@@ -69,9 +52,11 @@ module.exports = {
           );
 
           modal.addComponents(op_1, op_2);
-          await i.showModal(modal);
-        });
+          await interaction.showModal(modal);
+        
       } else if (cmd === "ver") {
+        await interaction.deferReply();
+        
         let user = interaction.options.getUser("membro");
 
         let userdb = await client.userdb.findOne({ id: user.id });

@@ -5,9 +5,10 @@ module.exports = {
 
   run: async(client, interaction)=> {
 
+    await interaction.deferReply({ ephemeral: true })
     try {
       return interaction.editReply({
-        content: `Ajuste cada detalhe da minha perfeição em meu grandioso palco digital: ${client.website}/dashboard/${interaction.guild.id}`
+        content: `Desativado até a próxima atualização...`
       })
     } catch (e) {
       console.log(e)

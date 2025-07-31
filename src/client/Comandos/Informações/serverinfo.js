@@ -7,9 +7,10 @@ module.exports = {
 
   run: async (client, interaction) => {
     try {
-   //   await interaction.deferReply();
+      await interaction.deferReply();
 
       const guild = interaction.guild;
+      
 
       // Contagens
       const totalMembros = guild.memberCount;

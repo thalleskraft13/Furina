@@ -59,6 +59,8 @@ module.exports = {
       const subcmdgroup = interaction.options.getSubcommandGroup(false);
       const subcmd = interaction.options.getSubcommand();
 
+      await interaction.deferReply();
+      
       // Função para formatar tempo restante em "1h 15m 30s"
       const formatarTempoRestante = (ms) => {
         if (ms <= 0) return null;
@@ -87,6 +89,7 @@ module.exports = {
 
       // Se for o subcomando raiz 'status'
       if (!subcmdgroup && subcmd === "status") {
+        
         let userdb = await client.userdb.findOne({ id: interaction.user.id });
         if (!userdb) {
           userdb = new client.userdb({ id: interaction.user.id });
@@ -157,6 +160,7 @@ module.exports = {
       // --- MONDSTADT ---
       if (subcmdgroup === "mondstadt") {
         if (subcmd === "iniciar") {
+        
           let img = new AttachmentBuilder("./src/img/nação/mondstadt.jpeg");
 
           const msg = await interaction.editReply({

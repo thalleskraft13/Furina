@@ -26,6 +26,7 @@ module.exports = {
 
   run: async (Furina, interaction) => {
     try {
+      await interaction.deferReply();
       const user = interaction.options.getUser("usuário");
 
       let userdb = await Furina.userdb.findOne({ id: interaction.user.id });

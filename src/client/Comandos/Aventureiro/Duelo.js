@@ -34,7 +34,8 @@ module.exports = {
   run: async (client, interaction) => {
     const subcommand = interaction.options.getSubcommand();
     const Usuarios = client.userdb;
-
+    await interaction.deferReply();
+    
     try {
       if (subcommand === "abismo") {
         if (!client.Abismo || typeof client.Abismo.comando !== "function") {

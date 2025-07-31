@@ -21,9 +21,17 @@ module.exports = {
 
   run: async (client, interaction) => {
     try {
-      const mensagem = interaction.options.getString('mensagem');
+      await interaction.deferReply();
+
+      let mensagem = interaction.options.getString('mensagem');
       const tempoStr = interaction.options.getString('tempo');
       const tempoMs = ms(tempoStr);
+
+      // Filtra menções perigosas
+      mensagem = mensagem
+        .replace(/@everyone/g, '[everyone]')
+        .replace(/@here/g, '[here]')
+        .replace(/<@&\d+>/g, '[cargo]');
 
       if (!tempoMs || tempoMs < 5000 || tempoMs > 31536000000) {
         return interaction.editReply({
@@ -43,6 +51,7 @@ module.exports = {
 
       return interaction.editReply({
         content: `⏰ O tempo está marcado! Em **${tempoStr}**, <@${interaction.user.id}>, como Arconte da Justiça, espero que isso tenha valido a espera~ ✨`,
+        allowedMentions: { users: [interaction.user.id] },
         flags: 64
       });
 

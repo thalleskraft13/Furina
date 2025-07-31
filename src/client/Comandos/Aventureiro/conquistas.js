@@ -11,6 +11,7 @@ module.exports = {
   type: 1,
 
   async run(client, interaction) {
+    await interaction.deferReply();
     const usuarioConquistas = (await client.conquistas.listarConquistasPorCategoria(interaction.user.id)) || {};
 
     let todasConquistasUsuario = [];
