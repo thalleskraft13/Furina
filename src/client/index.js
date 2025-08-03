@@ -3,6 +3,8 @@ const { getInfo, ClusterClient } = require("discord-hybrid-sharding");
 const fs = require("fs");
 const chalk = require("chalk");
 require("dotenv").config();
+const { v4: uuidv4 } = require("uuid");
+
 
 const connectMongo = require("./mongodb/connectMongo");
 const GerenciadorSorteios = require("../class/GerenciadorSorteio");
@@ -15,8 +17,10 @@ const Exploracao = require("../class/Exploração");
 const Conquistas = require("../class/Conquistas");
 const GuildaManager = require("../class/guilda");
 const Pvp = require("../class/Pvp");
-const CustomCollector = require("../class/Collector")
-
+const CustomCollector = require("../class/Collector");
+const ConfigMsgAuto = require("../class/ConfigMsgAuto")
+const ConfigAutorole = require("../class/ConfigAutoRole")
+const MareDourada = require("../class/ConfigPremium")
 const Furina = new Client({
   shards: getInfo().SHARD_LIST,
   shardCount: getInfo().TOTAL_SHARDS,
@@ -57,7 +61,7 @@ Furina.MsgAuto = require("./mongodb/msg");
 Furina.guilda = require("./mongodb/guilda");
 
 Furina.website = "https://furina-do-discord.onrender.com";
-Furina.bannerAtual = "1.5";
+Furina.bannerAtual = "1.6";
 Furina.categories = fs.readdirSync("./src/client/Comandos");
 
 Furina.RankAventureiro = new RankAventureiro(Furina);
@@ -72,6 +76,9 @@ Furina.conquistasJson = require("../class/data/conquistas.js");
 Furina.Abismo = new Abismo(Furina);
 Furina.Pvp = new Pvp(Furina);
 Furina.CustomCollector = new CustomCollector(Furina);
+Furina.ConfigMsgAuto = new ConfigMsgAuto(Furina);
+Furina.ConfigAutorole = new ConfigAutorole(Furina);
+Furina.MareDourada = new MareDourada(Furina);
 Furina.obterComando = async function (nome) {
   try {
     const comandos = await Furina.application.commands.fetch();
@@ -81,6 +88,55 @@ Furina.obterComando = async function (nome) {
     console.error(`Erro ao obter o comando "${nome}":`, err);
     return null;
   }
+};
+
+Furina.reportarErro = async function ({
+  erro,
+  comando = "?",
+  servidor = null,
+}) {
+  const idErro = uuidv4().slice(0, 30); // ID curto e único
+  const canalErro = "1401501962234757140";
+
+  const stackFormatado = `\`\`\`js\n${erro.stack || erro.message || String(erro)}\n\`\`\``;
+
+  const embed = new EmbedBuilder()
+    .setTitle("❌ Erro Detectado")
+    .setDescription(`Um erro ocorreu durante a execução de um comando.`)
+    .addFields(
+      { name: "🆔 ID do Erro", value: `\`${idErro}\`` },
+      { name: "📘 Comando", value: `\`${comando || "Desconhecido"}\`` },
+      {
+        name: "🌐 Servidor",
+        value: servidor
+          ? `\`${servidor.name}\` (ID: ${servidor.id})`
+          : "*Não informado*",
+      },
+      {
+        name: "✨️ Cluster",
+        value: `${Furina.clusterName}`
+      },
+      {
+        name: "📝 Erro",
+        value: stackFormatado.length > 1024
+          ? stackFormatado.slice(0, 1020) + "...\n```"
+          : stackFormatado,
+      }
+    )
+    .setColor("#FF5555")
+    .setTimestamp();
+
+
+  try {
+    await Furina.restMessenger.enviar(canalErro, {
+      content: `🔧 Relatório automático de erro \`#${idErro}\``,
+      embeds: [embed.toJSON()],
+    });
+  } catch (err) {
+    console.error("[Relatório de Erro] Falha ao enviar relatório via REST:", err);
+  }
+
+  return idErro;
 };
 
 ["event_handler", "slash_handler"].forEach((handler) => {
@@ -157,22 +213,9 @@ Furina.once("ready",async() => {
     });
 
     // Log da mudança de status
-    try {
-      const embed = new EmbedBuilder()
-        .setTitle("🔄 Presença Atualizada")
-        .setColor("#FFD700")
-        .setDescription(`A presença do bot foi atualizada com uma nova mensagem de status.`)
-        .addFields(
-          { name: "📣 Frase", value: frase, inline: false },
-          { name: "🎭 Cluster", value: `\`${Furina.clusterName}\``, inline: true },
-          { name: "🧩 Shards", value: `${Furina.shard?.ids?.join(", ") || "Desconhecido"}`, inline: true }
-        )
-        .setTimestamp();
+    
 
-      await Furina.restMessenger.enviar(canalLogsStatusId, { embeds: [embed] });
-    } catch (error) {
-      console.error("Erro ao enviar log de status:", error);
-    }
+      
 
     grupoIndex = (grupoIndex + 1) % statusList.length;
   }

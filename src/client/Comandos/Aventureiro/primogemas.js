@@ -138,17 +138,38 @@ if (subcmd === "daily") {
       });
     }
 
-    const min = 500;
-    const max = 1200;
-    let recompensa = Math.floor(Math.random() * (max - min + 1)) + min;
+        const agora = Date.now();
+    let serverdb = await client.serverdb.findOne({ serverId: interaction.guild.id });
+    if (!serverdb){
+      let newsv = new client.serverdb({ serverId: interaction.guild.id });
 
-    if (userdb.premium > Date.now()) {
-      recompensa *= 2;
+      await newsv.save();
+
+      serverdb = await client.serverdb.findOne({ serverId: interaction.guild.id });
     }
 
-    userdb.primogemas += recompensa;
-    userdb.daily = agora + 24 * 60 * 60 * 1000; // 24h
-    await userdb.save();
+
+        const min = 500;
+        const max = 1200;
+        let recompensa = Math.floor(Math.random() * (max - min + 1)) + min;
+
+        const serverPremiumAtivo = serverdb.premium && serverdb.premium > agora;
+        const bonusAtivo = serverdb.mareDouradaConfig?.bonusPrimogemas === true;
+        const userPremiumAtivo = userdb.premium && userdb.premium > agora;
+
+        if (serverPremiumAtivo && bonusAtivo) {
+          recompensa *= 1.5; 
+        }
+
+          if (userPremiumAtivo) {
+            recompensa *= 2; 
+          }
+
+          recompensa = Math.floor(recompensa);
+
+          userdb.primogemas += recompensa;
+          userdb.daily = agora + 24 * 60 * 60 * 1000; 
+          await userdb.save();
 
     const ts = Math.floor(userdb.daily / 1000);
 
@@ -156,11 +177,12 @@ if (subcmd === "daily") {
       .setColor("#3DD1D9")
       .setTitle("✨ Recompensa Diária Recebida!")
       .setDescription(
-        `🎭 Bravo, bravo! Com um gesto digno de aplausos, você recebeu **${recompensa} primogemas** neste ato diário!\n\n` +
+        `🎭 Bravo, bravo! Você recebeu **${recompensa} primogemas** neste ato diário!\n\n` +
         `O próximo espetáculo poderá ser assistido <t:${ts}:R>.\n\n` +
-        `${userdb.premium > Date.now() ? "💎 *O brilho do status Premium duplicou sua recompensa!*" : ""}`
+        `${userPremiumAtivo ? "💎 *O brilho do status Premium do usuário duplicou sua recompensa!*" : ""}\n` +
+        `${serverPremiumAtivo && bonusAtivo ? "🌟 *O bônus da Maré Dourada do servidor aumentou sua recompensa em 50%!*" : ""}`
       )
-      .setThumbnail(user.displayAvatarURL({ dynamic: true }))
+      .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
       .setFooter({ text: "— Furina, a Estrela deste palco encantado." });
 
     await btnInt.update({
@@ -197,98 +219,89 @@ if (subcmd === "daily") {
 }
 
       if (subcmd === "rank") {
-  let pagina = interaction.options.getInteger("pagina") || 1;
-  if (pagina < 1) pagina = 1;
+        const todosUsuarios = await client.userdb.find({}).sort({ primogemas: -1 });
+        const totalUsuarios = todosUsuarios.length;
+        const itensPorPagina = 10;
+        const totalPaginas = Math.ceil(totalUsuarios / itensPorPagina);
 
-  const todosUsuarios = await client.userdb.find({}).sort({ primogemas: -1 });
-  const totalUsuarios = todosUsuarios.length;
-  const itensPorPagina = 5;
-  const totalPaginas = Math.ceil(totalUsuarios / itensPorPagina);
+        let paginaAtual = interaction.options.getInteger("pagina") || 1;
+        if (paginaAtual < 1) paginaAtual = 1;
+        if (paginaAtual > totalPaginas && totalPaginas > 0) paginaAtual = totalPaginas;
 
-  if (pagina > totalPaginas && totalPaginas > 0) pagina = totalPaginas;
+        const gerarEmbed = async (pagina) => {
+          const usuariosPagina = todosUsuarios.slice(
+            (pagina - 1) * itensPorPagina,
+            pagina * itensPorPagina
+          );
 
-  const getDescricaoPagina = async (pg) => {
-    const sliceUsuarios = todosUsuarios.slice(
-      (pg - 1) * itensPorPagina,
-      pg * itensPorPagina
-    );
+          let descricao = "";
+          for (let idx = 0; idx < usuariosPagina.length; idx++) {
+            const u = usuariosPagina[idx];
+            const user =
+              client.users.cache.get(u.id) || (await client.users.fetch(u.id).catch(() => null));
+            const username = user ? user.username : "Desconhecido";
+            const posicao = (pagina - 1) * itensPorPagina + idx + 1;
+            descricao += `**${posicao}** - [${username}](https://discord.com/users/${u.id}) com **${u.primogemas}** primogemas\n`;
+          }
 
-    let descricao = "";
-    for (let idx = 0; idx < sliceUsuarios.length; idx++) {
-      const u = sliceUsuarios[idx];
-      const user = client.users.cache.get(u.id) || await client.users.fetch(u.id).catch(() => null);
-      const username = user ? user.username : "Desconhecido";
-      descricao += `**${(pg - 1) * itensPorPagina + idx + 1}** - [${username}](https://discord.com/users/${u.id}) com **${u.primogemas}** primogemas\n`;
-    }
-    if (descricao.length === 0) descricao = "✨ Ainda não há aventureiros registrados no ranking.";
-    return descricao;
-  };
+          if (!descricao) descricao = "✨ Ainda não há aventureiros registrados no ranking.";
 
-  const descricao = await getDescricaoPagina(pagina);
+          return new EmbedBuilder()
+            .setTitle(`✨ Ranking das Primogemas — Página ${pagina}/${totalPaginas || 1}`)
+            .setDescription(descricao)
+            .setColor("#3DD1D9")
+            .setFooter({ text: `Mostrando ${Math.min(itensPorPagina, totalUsuarios)} de ${totalUsuarios} aventureiros.` });
+        };
 
-  const embedRank = new EmbedBuilder()
-    .setTitle(`✨ Ranking das Primogemas — Página ${pagina}/${totalPaginas || 1}`)
-    .setDescription(descricao)
-    .setColor("#3DD1D9")
-    .setFooter({ text: `Mostrando ${Math.min(itensPorPagina, totalUsuarios)} de ${totalUsuarios} aventureiros.` });
+        const atualizarMensagem = async (pg, i = interaction) => {
+          const embed = await gerarEmbed(pg);
 
-  const row = new ActionRowBuilder();
+          const row = new ActionRowBuilder();
 
-  if (pagina > 1) {
-    const prevId = client.CustomCollector.create(async (btnInt) => {
-      if (btnInt.user.id !== interaction.user.id) {
-        return btnInt.reply({
-          content: "✨ Apenas o aventureiro que executou o comando pode usar estes botões.",
-          ephemeral: true,
-        });
+          if (pg > 1) {
+            const prevId = client.CustomCollector.create(async (btnInt) => {
+              if (btnInt.user.id !== interaction.user.id)
+                return btnInt.reply({ content: "⚠️ Apenas você pode navegar nesse ranking.", ephemeral: true });
+
+              await btnInt.deferUpdate();
+              await atualizarMensagem(pg - 1, btnInt);
+            }, { authorId: interaction.user.id, timeout: 60000 });
+
+            row.addComponents(
+              new ButtonBuilder()
+                .setCustomId(prevId)
+                .setLabel("◀️ Anterior")
+                .setStyle(ButtonStyle.Primary)
+            );
+          }
+
+          if (pg < totalPaginas) {
+            const nextId = client.CustomCollector.create(async (btnInt) => {
+              if (btnInt.user.id !== interaction.user.id)
+                return btnInt.reply({ content: "⚠️ Apenas você pode navegar nesse ranking.", ephemeral: true });
+
+              await btnInt.deferUpdate();
+              await atualizarMensagem(pg + 1, btnInt);
+            }, { authorId: interaction.user.id, timeout: 60000 });
+
+            row.addComponents(
+              new ButtonBuilder()
+                .setCustomId(nextId)
+                .setLabel("Próximo ▶️")
+                .setStyle(ButtonStyle.Primary)
+            );
+          }
+
+          await i.editReply({
+            embeds: [embed],
+            components: row.components.length ? [row] : [],
+          });
+        };
+
+       // await interaction.deferReply();
+        await atualizarMensagem(paginaAtual);
       }
-      // Atualiza a página para anterior
-      await btnInt.deferUpdate();
 
-      // Reexecutar a lógica para a página anterior
-      interaction.options._subcommand = "rank"; // só para manter coerência se usar função geral
-      interaction.options._hoistedOptions = [
-        { name: "pagina", type: 4, value: pagina - 1 }
-      ];
-      client.emit("interactionCreate", interaction);
-    }, { timeout: 60000 });
-
-    row.addComponents(
-      new ButtonBuilder()
-        .setCustomId(prevId)
-        .setLabel("◀️ Anterior")
-        .setStyle(ButtonStyle.Primary)
-    );
-  }
-
-  if (pagina < totalPaginas) {
-    const nextId = client.CustomCollector.create(async (btnInt) => {
-      if (btnInt.user.id !== interaction.user.id) {
-        return btnInt.reply({
-          content: "✨ Apenas o aventureiro que executou o comando pode usar estes botões.",
-          ephemeral: true,
-        });
-      }
-      await btnInt.deferUpdate();
-
-      // Reexecutar a lógica para a próxima página
-      interaction.options._subcommand = "rank";
-      interaction.options._hoistedOptions = [
-        { name: "pagina", type: 4, value: pagina + 1 }
-      ];
-      client.emit("interactionCreate", interaction);
-    }, { timeout: 60000 });
-
-    row.addComponents(
-      new ButtonBuilder()
-        .setCustomId(nextId)
-        .setLabel("Próximo ▶️")
-        .setStyle(ButtonStyle.Primary)
-    );
-  }
-
-  await interaction.editReply({ embeds: [embedRank], components: row.components.length ? [row] : [] });
-}
 
 if (subcmd === "pagar") {
   const pagador = interaction.user;
@@ -659,9 +672,33 @@ const perdedorDB = jogadores[perdedorIndex].db;
   return interaction.editReply({ embeds: [embed], components: [row] });
 }
 
-    } catch (e) {
-      console.log(e);
-      return interaction.editReply(`❌ Oh là là! Algo deu errado ao executar o comando. Por favor, reporte ao servidor de suporte para que possamos trazer justiça a essa falha.\n\n\`\`\`\n${e}\n\`\`\``);
-    }
+    } catch (err) {
+  console.error(err);
+
+  const id = await client.reportarErro({
+    erro: err,
+    comando: interaction.commandName,
+    servidor: interaction.guild
+  });
+
+  return interaction.editReply({
+    content: `❌ Oh là là... Um contratempo inesperado surgiu durante a execução deste comando. Por gentileza, reporte este erro ao nosso servidor de suporte junto com o ID abaixo, para que a justiça divina possa ser feita!\n\n🆔 ID do erro: \`${id}\``,
+    components: [
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            label: "Servidor de Suporte",
+            style: 5,
+            url: "https://discord.gg/KQg2B5JeBh"
+          }
+        ]
+      }
+    ],
+    embeds: [],
+    files: []
+  });
+}
   }
 };

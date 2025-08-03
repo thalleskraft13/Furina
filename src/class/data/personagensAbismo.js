@@ -2375,7 +2375,211 @@ Sethos: {
       }
     }
   }
+},
+
+    Neuvillette: {
+  nome: "Neuvillette",
+  papel: "DPS",
+  elemento: "Hydro",
+  ataques: {
+    normal: {
+      descricao: "Dispara rajadas de água com seu bastão, causando dano Hydro.",
+      executar: (status, atributos) => {
+        return atributos.atk * 1.2 + (status.bonusAtk || 0);
+      }
+    },
+    elemental: {
+      descricao: "Libera uma onda de julgamento Hydro em área.",
+      executar: (status, atributos) => {
+        return atributos.atk * 2.0 + (status.danoBonus || 0);
+      }
+    },
+    ult: {
+      descricao: "Invoca a Suprema Autoridade Hydro, causando dano massivo e cura com base no HP.",
+      executar: (status, atributos, equipe = []) => {
+        equipe.forEach(p => {
+          const cura = atributos.hp * 0.1;
+          if (!p.status) p.status = {};
+          p.status.hpAtual = Math.min(p.atributos.hpMax, (p.status.hpAtual || p.atributos.hpMax) + cura);
+        });
+        return atributos.atk * 3.5 + (status.danoBonusUlt || 0);
+      }
+    }
+  },
+  constelacoes: {
+    c1: {
+      descricao: "Aumenta o dano de ataques carregados em 20%.",
+      aplicar: (status) => {
+        status.danoCarga = (status.danoCarga || 0) + 20;
+      }
+    },
+    c2: {
+      descricao: "Recupera 10 de energia ao usar o Supremo.",
+      aplicarUlt: (status) => {
+        status.energiaRecuperada = (status.energiaRecuperada || 0) + 10;
+      }
+    },
+    c3: {
+      descricao: "Aumenta o dano de habilidades elementais em 25%.",
+      aplicar: (status) => {
+        status.danoBonus = (status.danoBonus || 0) + 25;
+      }
+    },
+    c4: {
+      descricao: "Aumenta a proficiência elemental em 100.",
+      aplicar: (status) => {
+        status.profElementalBonus = (status.profElementalBonus || 0) + 0.2; // 0.2 multiplicador adicional
+      }
+    },
+    c5: {
+      descricao: "Aumenta o dano do Supremo em 30%.",
+      aplicarUlt: (status) => {
+        status.danoBonusUlt = (status.danoBonusUlt || 0) + 30;
+      }
+    },
+    c6: {
+      descricao: "Aumenta a taxa crítica em 20% e dano crítico em 40%.",
+      aplicar: (status) => {
+        status.taxaCritica = (status.taxaCritica || 5) + 20;
+        status.danoCritico = (status.danoCritico || 50) + 40;
+      }
+    }
+  }
+},
+    Zhongli: {
+  nome: "Zhongli",
+  papel: "Escudeiro",
+  elemento: "Geo",
+  ataques: {
+    normal: {
+      descricao: "Desfere ataques Geo com sua lança.",
+      executar: (status, atributos) => {
+        return atributos.atk * 1.0 + (status.bonusAtk || 0);
+      }
+    },
+    elemental: {
+      descricao: "Cria um escudo de jade que absorve dano com base no HP máximo de Zhongli.",
+      executar: (status, atributos, equipe = []) => {
+        const escudo = atributos.hp * 0.25;
+        equipe.forEach(p => {
+          if (!p.status) p.status = {};
+          p.status.escudo = (p.status.escudo || 0) + escudo;
+        });
+        return true; // Não causa dano diretamente
+      }
+    },
+    ult: {
+      descricao: "Invoca um meteoro que causa dano Geo massivo e petrifica inimigos.",
+      executar: (status, atributos) => {
+        return atributos.atk * 3.0 + atributos.hp * 0.2 + (status.danoBonusUlt || 0);
+      }
+    }
+  },
+  constelacoes: {
+    c1: {
+      descricao: "O escudo de jade também aumenta a resistência a interrupção em 20%.",
+      aplicar: (status) => {
+        status.resistenciaInterrupcao = (status.resistenciaInterrupcao || 0) + 20;
+      }
+    },
+    c2: {
+      descricao: "Os inimigos atingidos pela habilidade elemental têm a resistência Geo reduzida em 20%.",
+      aplicar: (status) => {
+        status.reducaoResGeo = (status.reducaoResGeo || 0) + 20;
+      }
+    },
+    c3: {
+      descricao: "Aumenta o dano do Supremo em 20%.",
+      aplicarUlt: (status) => {
+        status.danoBonusUlt = (status.danoBonusUlt || 0) + 20;
+      }
+    },
+    c4: {
+      descricao: "O escudo de jade regenera 5% do HP do personagem protegido a cada 2s.",
+      aplicar: (status) => {
+        status.regenComEscudo = (status.regenComEscudo || 0) + 5;
+      }
+    },
+    c5: {
+      descricao: "Aumenta o dano da habilidade elemental em 25%.",
+      aplicar: (status) => {
+        status.danoBonus = (status.danoBonus || 0) + 25;
+      }
+    },
+    c6: {
+      descricao: "Ao atingir inimigos com o meteoro, reduz a resistência de todos os elementos em 20% por 20s.",
+      aplicarUlt: (status) => {
+        status.reducaoResGlobal = (status.reducaoResGlobal || 0) + 20;
+      }
+    }
+  }
+},
+    Fischl: {
+  nome: "Fischl",
+  papel: "Suporte",
+  elemento: "Electro",
+  ataques: {
+    normal: {
+      descricao: "Dispara flechas encantadas com Electro.",
+      executar: (status, atributos) => {
+        return atributos.atk * 1.1 + (status.bonusAtk || 0);
+      }
+    },
+    elemental: {
+      descricao: "Invoca Oz, o corvo da escuridão, que causa dano Electro contínuo.",
+      executar: (status, atributos, equipe = [], contexto = {}) => {
+        if (!contexto.turnosOz) contexto.turnosOz = 3;
+        contexto.ozDano = atributos.atk * 0.8 + (status.danoBonus || 0);
+        return atributos.atk * 1.5 + (status.danoBonus || 0);
+      }
+    },
+    ult: {
+      descricao: "Fischl se funde com Oz e causa múltiplos ataques Electro em linha reta.",
+      executar: (status, atributos) => {
+        return atributos.atk * 2.8 + (status.danoBonusUlt || 0);
+      }
+    }
+  },
+  constelacoes: {
+    c1: {
+      descricao: "Oz ataca junto com Fischl sempre que ela usa ataque normal.",
+      aplicar: (status) => {
+        status.ozAtaqueExtra = true;
+      }
+    },
+    c2: {
+      descricao: "Oz permanece em campo por 2s a mais.",
+      aplicar: (status) => {
+        status.ozDuracaoExtra = (status.ozDuracaoExtra || 0) + 2;
+      }
+    },
+    c3: {
+      descricao: "Aumenta o dano da habilidade elemental em 25%.",
+      aplicar: (status) => {
+        status.danoBonus = (status.danoBonus || 0) + 25;
+      }
+    },
+    c4: {
+      descricao: "Quando Oz atinge um inimigo, Fischl regenera 2% do HP.",
+      aplicar: (status) => {
+        status.ozCura = (status.ozCura || 0) + 2;
+      }
+    },
+    c5: {
+      descricao: "Aumenta o dano do Supremo em 20%.",
+      aplicarUlt: (status) => {
+        status.danoBonusUlt = (status.danoBonusUlt || 0) + 20;
+      }
+    },
+    c6: {
+      descricao: "Quando Fischl causa reação Electro, ela ganha 30% de ATK por 10s.",
+      aplicar: (status) => {
+        status.reacaoBonusAtk = (status.reacaoBonusAtk || 0) + 30;
+      }
+    }
+  }
 }
+
 
 
     

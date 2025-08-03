@@ -2,8 +2,7 @@ const {
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle,
-  ComponentType,
+  ButtonStyle
 } = require("discord.js");
 
 const ITEMS_PER_PAGE = 10;
@@ -42,7 +41,8 @@ module.exports = {
     try {
       const subcommand = interaction.options.getSubcommand();
       await interaction.deferReply();
-      
+
+      // Subcomando de visualizar rank individual
       if (subcommand === "ver") {
         const user = interaction.options.getUser("usuário") || interaction.user;
 
@@ -78,14 +78,14 @@ module.exports = {
         return interaction.editReply({ embeds: [embed] });
       }
 
+      // Subcomando de ranking (global ou servidor)
       let usuarios = await client.userdb.find({}).sort({ "level.ar": -1, "level.xp": -1 }).lean();
 
       if (subcommand === "servidor") {
         if (!interaction.guild) {
-          return interaction.editReply(
-            "✨ Este comando só pode ser usado dentro dos domínios do servidor, aventureiro~"
-          );
+          return interaction.editReply("✨ Este comando só pode ser usado dentro dos domínios do servidor, aventureiro~");
         }
+
         const membrosIds = interaction.guild.members.cache.map((m) => m.user.id);
         usuarios = usuarios.filter((u) => membrosIds.includes(u.id));
       }
@@ -94,11 +94,11 @@ module.exports = {
         return interaction.editReply("✨ Aventureiro, não encontrei dados para mostrar o rank.");
       }
 
-      let page = 1;
-      const totalPages = Math.ceil(usuarios.length / ITEMS_PER_PAGE);
+      let pagina = 1;
+      const totalPaginas = Math.ceil(usuarios.length / ITEMS_PER_PAGE);
 
-      async function gerarEmbed(pageNum) {
-        const start = (pageNum - 1) * ITEMS_PER_PAGE;
+      const gerarEmbed = async (pg) => {
+        const start = (pg - 1) * ITEMS_PER_PAGE;
         const end = start + ITEMS_PER_PAGE;
         const pageItems = usuarios.slice(start, end);
 
@@ -111,66 +111,85 @@ module.exports = {
         }
 
         return new EmbedBuilder()
-          .setTitle(
-            subcommand === "global"
-              ? "🏆 Rank Global de Aventureiros"
-              : "🏰 Rank do Servidor"
-          )
+          .setTitle(subcommand === "global" ? "🏆 Rank Global de Aventureiros" : "🏰 Rank do Servidor")
           .setDescription(descricao || "✨ Nenhum aventureiro encontrado nesta página.")
-          .setFooter({ text: `Página ${pageNum} de ${totalPages} | Sob o olhar atento da justiça~` })
+          .setFooter({ text: `Página ${pg} de ${totalPaginas} | Sob o olhar atento da justiça~` })
           .setColor("#3DD1D9");
-      }
+      };
 
-      function gerarBotoes(pageNum) {
-        return new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId("voltar")
-            .setLabel("⬅️ Voltar")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(pageNum <= 1),
-          new ButtonBuilder()
-            .setCustomId("proximo")
-            .setLabel("Próximo ➡️")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(pageNum >= totalPages)
-        );
-      }
+      const atualizarPainel = async (pg, i = interaction) => {
+        const embed = await gerarEmbed(pg);
+        const row = new ActionRowBuilder();
 
-      await interaction.editReply({
-        embeds: [await gerarEmbed(page)],
-        components: [gerarBotoes(page)],
-      });
+        if (pg > 1) {
+          const voltarId = client.CustomCollector.create(async (btnInt) => {
+            if (btnInt.user.id !== interaction.user.id)
+              return btnInt.reply({ content: "⚠️ Apenas você pode navegar neste ranking.", ephemeral: true });
 
-      const collector = interaction.channel.createMessageComponentCollector({
-        componentType: ComponentType.Button,
-        time: 120000,
-      });
+            await btnInt.deferUpdate();
+            await atualizarPainel(pg - 1, btnInt);
+          }, { authorId: interaction.user.id, timeout: 120000 });
 
-      collector.on("collect", async (btnInt) => {
-        if (btnInt.user.id !== interaction.user.id) {
-          return btnInt.reply({
-            content: "✨ Somente o aventureiro que iniciou a jornada pode usar estes botões~",
-            ephemeral: true,
-          });
+          row.addComponents(
+            new ButtonBuilder()
+              .setCustomId(voltarId)
+              .setLabel("⬅️ Voltar")
+              .setStyle(ButtonStyle.Primary)
+          );
         }
 
-        if (btnInt.customId === "voltar" && page > 1) {
-          page--;
-        } else if (btnInt.customId === "proximo" && page < totalPages) {
-          page++;
+        if (pg < totalPaginas) {
+          const proximoId = client.CustomCollector.create(async (btnInt) => {
+            if (btnInt.user.id !== interaction.user.id)
+              return btnInt.reply({ content: "⚠️ Apenas você pode navegar neste ranking.", ephemeral: true });
+
+            await btnInt.deferUpdate();
+            await atualizarPainel(pg + 1, btnInt);
+          }, { authorId: interaction.user.id, timeout: 120000 });
+
+          row.addComponents(
+            new ButtonBuilder()
+              .setCustomId(proximoId)
+              .setLabel("Próximo ➡️")
+              .setStyle(ButtonStyle.Primary)
+          );
         }
 
-        await btnInt.update({
-          embeds: [await gerarEmbed(page)],
-          components: [gerarBotoes(page)],
+        await i.editReply({
+          embeds: [embed],
+          components: row.components.length ? [row] : [],
         });
+      };
+
+      await atualizarPainel(pagina);
+
+    } catch (err) {
+      console.error(err);
+
+      const id = await client.reportarErro({
+        erro: err,
+        comando: interaction.commandName,
+        servidor: interaction.guild
       });
 
-    } catch (e) {
-      console.error(e);
-      return interaction.editReply(
-        `❌ Ôh là là! Algo deslizou na justiça das marés... por favor, reporte ao suporte.\n\n\`\`\`\n${e}\n\`\`\``
-      );
+      return interaction.editReply({
+        content: `❌ Oh là là... Um contratempo inesperado surgiu durante a execução deste comando. Por gentileza, reporte este erro ao nosso servidor de suporte junto com o ID abaixo, para que a justiça divina possa ser feita!\n\n🆔 ID do erro: \`${id}\``,
+        components: [
+          {
+            type: 1,
+            components: [
+              {
+                type: 2,
+                label: "Servidor de Suporte",
+                style: 5,
+                url: "https://discord.gg/KQg2B5JeBh"
+              }
+            ]
+          }
+        ],
+        embeds: [],
+        files: []
+      });
     }
   },
 };

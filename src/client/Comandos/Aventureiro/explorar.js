@@ -455,12 +455,33 @@ module.exports = {
       }
 
       
-    } catch (e) {
-      console.error(e);
-      return interaction.editReply(
-        `❌ Oh là là! Algo inesperado aconteceu durante tua jornada...  
-Por favor, informe ao templo da Furina para que possamos restaurar a harmonia.\n\n\`\`\`\n${e}\n\`\`\``
-      );
-    }
+    } catch (err) {
+  console.error(err);
+
+  const id = await client.reportarErro({
+    erro: err,
+    comando: interaction.commandName,
+    servidor: interaction.guild
+  });
+
+  return interaction.editReply({
+    content: `❌ Oh là là... Um contratempo inesperado surgiu durante a execução deste comando. Por gentileza, reporte este erro ao nosso servidor de suporte junto com o ID abaixo, para que a justiça divina possa ser feita!\n\n🆔 ID do erro: \`${id}\``,
+    components: [
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            label: "Servidor de Suporte",
+            style: 5,
+            url: "https://discord.gg/KQg2B5JeBh"
+          }
+        ]
+      }
+    ],
+    embeds: [],
+    files: []
+  });
+}
   },
 };

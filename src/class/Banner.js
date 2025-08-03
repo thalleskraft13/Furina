@@ -47,7 +47,7 @@ class Banner {
     }
   }
 
-  async push(pity, userId, value, bannerId = "1") {
+  async push(pity, userId, value, bannerId = "1",  guildId) {
     if (!pity || typeof pity !== "object") pity = {};
     if (typeof pity.five !== "number") pity.five = 0;
     if (typeof pity.four !== "number") pity.four = 0;
@@ -67,12 +67,26 @@ class Banner {
     }
 
     const agora = Date.now();
-    const isPremium = userdb.premium && userdb.premium > agora;
+
+const serverDB = await this.client.serverdb.findOne({ serverId: guildId });
+const isUserPremium = userdb.premium && userdb.premium > agora;
+const isServerPremium = serverDB?.premium && serverDB.premium > agora;
+const mareDourada = serverDB?.mareDouradaConfig || {};
+
+let maxPity = 90;
+
+if (isUserPremium) {
+  maxPity = 60;
+} else if (isServerPremium && mareDourada.diminuiPity) {
+  maxPity = 75;
+}
+
+
 
     const custo = value * 160;
     userdb.primogemas -= custo;
 
-    const maxPity = isPremium ? 60 : 90;
+    
     const resultado = [];
     let sequenciaRaros = 0;
     let maxSequenciaRaros = 0;

@@ -11,7 +11,10 @@ module.exports = {
   type: 1,
 
   async run(client, interaction) {
+    
     await interaction.deferReply();
+
+    try {
     const usuarioConquistas = (await client.conquistas.listarConquistasPorCategoria(interaction.user.id)) || {};
 
     let todasConquistasUsuario = [];
@@ -103,5 +106,34 @@ module.exports = {
     collector.on("end", () => {
       msg.edit({ components: [] }).catch(() => {});
     });
+      } catch (err) {
+  console.error(err);
+
+  const id = await client.reportarErro({
+    erro: err,
+    comando: interaction.commandName,
+    servidor: interaction.guild
+  });
+
+  return interaction.editReply({
+    content: `❌ Oh là là... Um contratempo inesperado surgiu durante a execução deste comando. Por gentileza, reporte este erro ao nosso servidor de suporte junto com o ID abaixo, para que a justiça divina possa ser feita!\n\n🆔 ID do erro: \`${id}\``,
+    components: [
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            label: "Servidor de Suporte",
+            style: 5,
+            url: "https://discord.gg/KQg2B5JeBh"
+          }
+        ]
+      }
+    ],
+    embeds: [],
+    files: []
+  });
+}
+
   }
 };

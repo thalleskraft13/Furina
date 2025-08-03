@@ -212,10 +212,29 @@ module.exports = {
 
 
       
-      const premium = userdb.premium;
       const agora = Date.now();
-      let pity = 90;
-      if (premium > agora) pity = 60;
+
+let serverDB = await client.serverdb.findOne({ serverId: interaction.guild.id });
+      if (!serverDB){
+        let newserver = new client.serverdb({ serverId: interaction.guild.id});
+
+        await newserver.save();
+
+        serverDB = await client.serverdb.findOne({ serverId: interaction.guild.id });
+      }
+const isUserPremium = userdb.premium && userdb.premium > agora;
+const isServerPremium = serverDB?.premium && serverDB.premium > agora;
+const mareDourada = serverDB?.mareDouradaConfig || {};
+
+let maxPity = 90;
+
+if (isUserPremium) {
+  pity = 60;
+} else if (isServerPremium && mareDourada.diminuiPity) {
+  pity = 75;
+}
+
+
 
       const bannerAtualEscolhido = `${Furina.bannerAtual}-${bannerChoice}`;
       const bannerURL = `attachment://${bannerAtualEscolhido}.jpeg`;
@@ -252,7 +271,8 @@ module.exports = {
           userdb.gacha.pity,
           interaction.user.id,
           1,
-          bannerChoice
+          bannerChoice,
+          interaction.guild.id 
         );
         const res = resultado[0];
         const gifUrl = gifs[`1tiro-t${res.raridade}`];
@@ -315,7 +335,8 @@ module.exports = {
           userdb.gacha.pity,
           interaction.user.id,
           10,
-          bannerChoice
+          bannerChoice,
+          interaction.guild.id
         );
         const t5 = resultado.some((p) => p.raridade === 5);
         const gifUrl = t5 ? gifs["10tiro-t5"] : gifs["10tiro-t4"];
@@ -377,11 +398,34 @@ module.exports = {
       });
 
       
-    } catch (e) {
-      console.error(e);
-      return interaction.editReply(
-        `❌ Oh là là! Algo deu errado ao executar o comando. Por favor, reporte ao servidor de suporte.\n\n\`\`\`\n${e}\n\`\`\``
-      );
+    } catch (err) {
+      console.error(err);
+
+      const id = await client.reportarErro({
+        erro: err,
+        comando: interaction.commandName,
+        servidor: interaction.guild
+      });
+
+      return interaction.editReply({
+        content: `❌ Oh là là... Um contratempo inesperado surgiu durante a execução deste comando. Por gentileza, reporte este erro ao nosso servidor de suporte junto com o ID abaixo, para que a justiça divina possa ser feita!\n\n🆔 ID do erro: \`${id}\``,
+        components: [
+          {
+            type: 1,
+            components: [
+              {
+                type: 2,
+                label: "Servidor de Suporte",
+                style: 5,
+                url: "https://discord.gg/KQg2B5JeBh"
+              }
+            ]
+          }
+        ],
+        embeds: [],
+        files: []
+      });
     }
+
   },
 };

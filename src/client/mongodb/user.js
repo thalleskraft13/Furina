@@ -34,6 +34,13 @@ const personagemSchema = new Schema({
     habilidadeElemental: { type: Number, default: 1 },
     supremo: { type: Number, default: 1 },
   },
+  artefatos: {
+    flor: { type: String, default: null },   // id do artefato equipado
+    pena: { type: String, default: null },
+    areia: { type: String, default: null },
+    calice: { type: String, default: null },
+    tiara: { type: String, default: null },
+  }
 });
 
 const usuarioSchema = new Schema({
@@ -50,12 +57,11 @@ const usuarioSchema = new Schema({
   itens: { type: Array, default: [] },
   equipe: { type: Array, default: [] },
   abismo: {
-    camada: { type: Number, default: 1},
+    camada: { type: Number, default: 1 },
     piso: { type: Number, default: 1 },
   },
   vitoriasPvP: { type: Number, default: 0 },
   derrotasPvP: { type: Number, default: 0 },
-
 
   conquistas: { type: Array, default: [] },
 
@@ -74,6 +80,42 @@ const usuarioSchema = new Schema({
   },
 
   personagens: { type: [personagemSchema], default: [] },
+
+  artefatos: {
+    type: [
+      {
+        id: { type: String, required: true },
+        conjunto: { type: String, required: true },
+        tipo: { type: String, required: true }, // Flor, Pena, etc.
+        raridade: { type: Number, required: true }, // 3 a 5
+        nivel: { type: Number, default: 0 },
+        exp: { type: Number, default: 0 },
+
+        statusPrincipal: {
+          nome: { type: String, required: true },
+          valor: { type: Number, required: true },
+        },
+
+        substatus: {
+          type: [
+            {
+              nome: { type: String, required: true },
+              valor: { type: Number, required: true },
+            },
+          ],
+          default: [],
+        },
+
+        equipado: { type: Boolean, default: false },
+        personagem: { type: String, default: null }, // id ou nome do personagem
+      },
+    ],
+    default: [],
+  },
+
+  materiais: {
+    elevacaoArtefato: { type: Number, default: 0 },
+  },
 
   aviso: {
     ativado: { type: Boolean, default: false },
@@ -105,7 +147,7 @@ const usuarioSchema = new Schema({
         time: { type: Number, default: 0 },
         resgatado: { type: Boolean, default: true },
         resgatar: { type: Boolean, default: false },
-        inicio: { type: Number, default: 0}
+        inicio: { type: Number, default: 0 },
       },
       estatuaDosSetes: {
         nv: { type: Number, default: 0 },
@@ -126,7 +168,7 @@ const usuarioSchema = new Schema({
         time: { type: Number, default: 0 },
         resgatado: { type: Boolean, default: true },
         resgatar: { type: Boolean, default: false },
-        inicio: { type: Number, default: 0}
+        inicio: { type: Number, default: 0 },
       },
       estatuaDosSetes: {
         nv: { type: Number, default: 0 },
@@ -147,7 +189,7 @@ const usuarioSchema = new Schema({
         time: { type: Number, default: 0 },
         resgatado: { type: Boolean, default: true },
         resgatar: { type: Boolean, default: false },
-        inicio: { type: Number, default: 0}
+        inicio: { type: Number, default: 0 },
       },
       estatuaDosSetes: {
         nv: { type: Number, default: 0 },
@@ -155,7 +197,8 @@ const usuarioSchema = new Schema({
         electroculus: { type: Number, default: 0 },
       },
     },
-  sumeru: {
+
+    sumeru: {
       reputacao: {
         nv: { type: Number, default: 0 },
         xp: { type: Number, default: 0 },
@@ -167,7 +210,7 @@ const usuarioSchema = new Schema({
         time: { type: Number, default: 0 },
         resgatado: { type: Boolean, default: true },
         resgatar: { type: Boolean, default: false },
-        inicio: { type: Number, default: 0}
+        inicio: { type: Number, default: 0 },
       },
       estatuaDosSetes: {
         nv: { type: Number, default: 0 },
@@ -175,7 +218,7 @@ const usuarioSchema = new Schema({
         electroculus: { type: Number, default: 0 },
       },
     },
-    },
+  },
 
   perfil: {
     sobremim: { type: String, default: "Use o comando '/perfil sobremim' pra editar." },
