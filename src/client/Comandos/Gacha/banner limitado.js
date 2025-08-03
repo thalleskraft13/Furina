@@ -226,7 +226,8 @@ const isUserPremium = userdb.premium && userdb.premium > agora;
 const isServerPremium = serverDB?.premium && serverDB.premium > agora;
 const mareDourada = serverDB?.mareDouradaConfig || {};
 
-let maxPity = 90;
+let pity = 90;
+      
 
 if (isUserPremium) {
   pity = 60;
