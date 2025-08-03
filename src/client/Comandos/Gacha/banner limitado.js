@@ -214,13 +214,13 @@ module.exports = {
       
       const agora = Date.now();
 
-let serverDB = await client.serverdb.findOne({ serverId: interaction.guild.id });
+let serverDB = await Furina.serverdb.findOne({ serverId: interaction.guild.id });
       if (!serverDB){
-        let newserver = new client.serverdb({ serverId: interaction.guild.id});
+        let newserver = new Furina.serverdb({ serverId: interaction.guild.id});
 
         await newserver.save();
 
-        serverDB = await client.serverdb.findOne({ serverId: interaction.guild.id });
+        serverDB = await Furina.serverdb.findOne({ serverId: interaction.guild.id });
       }
 const isUserPremium = userdb.premium && userdb.premium > agora;
 const isServerPremium = serverDB?.premium && serverDB.premium > agora;
@@ -401,7 +401,7 @@ if (isUserPremium) {
     } catch (err) {
       console.error(err);
 
-      const id = await client.reportarErro({
+      const id = Furina.reportarErro({
         erro: err,
         comando: interaction.commandName,
         servidor: interaction.guild
