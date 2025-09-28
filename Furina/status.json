@@ -1,0 +1,64 @@
+{
+  "0": {
+    "shard": 0,
+    "cluster": "Juíza das Marés",
+    "cluster_id": 0,
+    "status": "Online",
+    "ping": "41ms",
+    "memoria": "32.74MB / 64312.69MB",
+    "servidores": 0,
+    "usuarios": 2,
+    "canais": 1,
+    "eventos": 5,
+    "uptime": "12.00 min",
+    "cpu": {
+      "user": 4888591,
+      "system": 776786,
+      "percent": "5.67%"
+    },
+    "versoes": {
+      "node": "v22.17.0",
+      "discordJs": "14.19.3",
+      "furina": "1.7"
+    },
+    "sistema": {
+      "tipo": "Linux",
+      "arquitetura": "x64",
+      "plataforma": "linux",
+      "uptimeSegundos": 165073.71
+    },
+    "iniciouEm": "2025-09-28T14:58:10.848Z",
+    "ultimoUpdate": "2025-09-28T14:58:10.848Z"
+  },
+  "1": {
+    "shard": 1,
+    "cluster": "Orquestra das Fontes",
+    "cluster_id": 1,
+    "status": "Online",
+    "ping": "44ms",
+    "memoria": "31.55MB / 64312.69MB",
+    "servidores": 3,
+    "usuarios": 9,
+    "canais": 228,
+    "eventos": 5,
+    "uptime": "11.00 min",
+    "cpu": {
+      "user": 6629132,
+      "system": 801016,
+      "percent": "7.43%"
+    },
+    "versoes": {
+      "node": "v22.17.0",
+      "discordJs": "14.19.3",
+      "furina": "1.7"
+    },
+    "sistema": {
+      "tipo": "Linux",
+      "arquitetura": "x64",
+      "plataforma": "linux",
+      "uptimeSegundos": 165020.62
+    },
+    "iniciouEm": "2025-09-28T14:57:17.762Z",
+    "ultimoUpdate": "2025-09-28T14:57:17.762Z"
+  }
+}

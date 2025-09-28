@@ -1,0 +1,45 @@
+{
+  "38315ea4-706f-486c-af27-573a3623584e": {
+    "fn": "async (selectInteraction) => {\n        if (selectInteraction.user.id !== interaction.user.id) {\n          return selectInteraction.reply({\n            content: '❌ Apenas quem usou o comando pode interagir!',\n            ephemeral: true\n          });\n        }\n\n        const escolha = selectInteraction.values[0];\n        const embed = {\n          gacha: embedGacha,\n          informacoes: embedInformacoes,\n          aventureiro: embedAventureiro,\n          roleplay: embedRoleplay,\n          administracao: embedAdministracao\n        }[escolha];\n\n        await selectInteraction.update({ embeds: [embed] });\n      }",
+    "authorId": "890320875142930462",
+    "timeout": 300000,
+    "expiresAt": 1758302249234,
+    "expired": false
+  },
+  "bbf9a998-cb70-419e-81e9-7c0b84f6b1b3": {
+    "fn": "async (btnInt) => {\n        await btnInt.deferUpdate();\n        if (btnInt.user.id !== interaction.user.id)\n          return btnInt.followUp({ content: \"❌ Apenas quem executou o comando pode usar estes botões.\", ephemeral: true });\n        if (userdb.primogemas < 160)\n          return btnInt.followUp({ content: \"Uma única invocação custa 160 primogemas.\", ephemeral: true });\n\n        const resultado = await Furina.Banner.push(pityData, interaction.user.id, 1, bannerChoice, interaction.guild.id);\n        const res = resultado[0];\n        const gifUrl = gifs[`1tiro-t${res.raridade}`];\n\n        await btnInt.editReply({ embeds: [new EmbedBuilder().setImage(gifUrl)], components: [], files: [] });\n\n        setTimeout(async () => {\n          const embed = new EmbedBuilder()\n            .setTitle(\"**A sorte lança seus dados!**\")\n            .setDescription(`Você obteve: **${res.nome}** (${res.type}) - ${res.raridade}★`)\n            .setColor(res.raridade === 5 ? \"#D9B468\" : res.raridade === 4 ? \"#8A75D1\" : \"#A0A0A0\")\n            .setImage(res.raridade < 4 ? null : `attachment://${res.nome}.png`);\n\n          await btnInt.editReply({\n            embeds: [embed],\n            files: res.raridade < 4 ? [] : [new AttachmentBuilder(`./src/img/banners/${res.type === \"Arma\" ? \"armas\" : \"personagens\"}/${res.nome}.png`)]\n          });\n        }, 5000);\n      }",
+    "type": "button",
+    "checkAuthor": true,
+    "authorId": "890320875142930462",
+    "timeout": 60000,
+    "expiresAt": 1758302224437,
+    "expired": true
+  },
+  "24f0d314-bc7b-46be-acbb-515c8f0cb17b": {
+    "fn": "async (btnInt) => {\n        await btnInt.deferUpdate();\n        if (btnInt.user.id !== interaction.user.id)\n          return btnInt.followUp({ content: \"❌ Apenas quem executou o comando pode usar estes botões.\", ephemeral: true });\n        if (userdb.primogemas < 1600)\n          return btnInt.followUp({ content: \"10 invocações custam 1600 primogemas.\", ephemeral: true });\n\n        const resultado = await Furina.Banner.push(pityData, interaction.user.id, 10, bannerChoice, interaction.guild.id);\n        const t5 = resultado.some(p => p.raridade === 5);\n        const gifUrl = t5 ? gifs[\"10tiro-t5\"] : gifs[\"10tiro-t4\"];\n\n        await btnInt.editReply({ embeds: [new EmbedBuilder().setImage(gifUrl)], components: [], files: [] });\n\n        setTimeout(async () => {\n          const buffer = await gerarImagemBanner(resultado, 10);\n          const attachment = new AttachmentBuilder(buffer, { name: \"resultado_10tiros.png\" });\n          await btnInt.editReply({\n            content: `${interaction.user}`,\n            embeds: [new EmbedBuilder()\n              .setTitle(\"**Resultado dos 10 desejos!**\")\n              .setDescription(resultado.map(p => `**${p.nome}** (${p.type}) - ${p.raridade}★`).join(\"\\n\"))\n              .setColor(\"#D9B468\")\n              .setImage(\"attachment://resultado_10tiros.png\")\n            ],\n            files: [attachment]\n          });\n        }, 7000);\n      }",
+    "type": "button",
+    "checkAuthor": true,
+    "authorId": "890320875142930462",
+    "timeout": 60000,
+    "expiresAt": 1758302224438,
+    "expired": true
+  },
+  "f8d4f5dc-923d-4de5-a8f5-129bd20816c3": {
+    "fn": "async (btnInt) => {\n        await btnInt.deferUpdate();\n        if (btnInt.user.id !== interaction.user.id)\n          return btnInt.followUp({ content: \"❌ Apenas quem executou o comando pode usar estes botões.\", ephemeral: true });\n        if (userdb.primogemas < 160)\n          return btnInt.followUp({ content: \"Uma única invocação custa 160 primogemas.\", ephemeral: true });\n\n        const resultado = await Furina.Banner.push(pityData, interaction.user.id, 1, bannerChoice, interaction.guild.id);\n        const res = resultado[0];\n        const gifUrl = gifs[`1tiro-t${res.raridade}`];\n\n        await btnInt.editReply({ embeds: [new EmbedBuilder().setImage(gifUrl)], components: [], files: [] });\n\n        setTimeout(async () => {\n          const embed = new EmbedBuilder()\n            .setTitle(\"**A sorte lança seus dados!**\")\n            .setDescription(`Você obteve: **${res.nome}** (${res.type}) - ${res.raridade}★`)\n            .setColor(res.raridade === 5 ? \"#D9B468\" : res.raridade === 4 ? \"#8A75D1\" : \"#A0A0A0\")\n            .setImage(res.raridade < 4 ? null : `attachment://${res.nome}.png`);\n\n          await btnInt.editReply({\n            embeds: [embed],\n            files: res.raridade < 4 ? [] : [new AttachmentBuilder(`./src/img/banners/${res.type === \"Arma\" ? \"armas\" : \"personagens\"}/${res.nome}.png`)]\n          });\n        }, 5000);\n      }",
+    "type": "button",
+    "checkAuthor": true,
+    "authorId": "890320875142930462",
+    "timeout": 60000,
+    "expiresAt": 1758302439688,
+    "expired": false
+  },
+  "20e97cb3-a3e3-4684-80e8-2ec4f4dcd110": {
+    "fn": "async (btnInt) => {\n        await btnInt.deferUpdate();\n        if (btnInt.user.id !== interaction.user.id)\n          return btnInt.followUp({ content: \"❌ Apenas quem executou o comando pode usar estes botões.\", ephemeral: true });\n        if (userdb.primogemas < 1600)\n          return btnInt.followUp({ content: \"10 invocações custam 1600 primogemas.\", ephemeral: true });\n\n        const resultado = await Furina.Banner.push(pityData, interaction.user.id, 10, bannerChoice, interaction.guild.id);\n        const t5 = resultado.some(p => p.raridade === 5);\n        const gifUrl = t5 ? gifs[\"10tiro-t5\"] : gifs[\"10tiro-t4\"];\n\n        await btnInt.editReply({ embeds: [new EmbedBuilder().setImage(gifUrl)], components: [], files: [] });\n\n        setTimeout(async () => {\n          const buffer = await gerarImagemBanner(resultado, 10);\n          const attachment = new AttachmentBuilder(buffer, { name: \"resultado_10tiros.png\" });\n          await btnInt.editReply({\n            content: `${interaction.user}`,\n            embeds: [new EmbedBuilder()\n              .setTitle(\"**Resultado dos 10 desejos!**\")\n              .setDescription(resultado.map(p => `**${p.nome}** (${p.type}) - ${p.raridade}★`).join(\"\\n\"))\n              .setColor(\"#D9B468\")\n              .setImage(\"attachment://resultado_10tiros.png\")\n            ],\n            files: [attachment]\n          });\n        }, 7000);\n      }",
+    "type": "button",
+    "checkAuthor": true,
+    "authorId": "890320875142930462",
+    "timeout": 60000,
+    "expiresAt": 1758302439690,
+    "expired": false
+  }
+}
