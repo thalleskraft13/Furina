@@ -84,9 +84,16 @@ module.exports = {
         pityData = userdb.gacha.arma;
         bannerFile = new AttachmentBuilder(`./Furina/img/banners/${Furina.bannerAtual}arma.jpeg`);
         bannerURL = `attachment://${Furina.bannerAtual}arma.jpeg`;
-      } else {
+      } else if (bannerChoice === "1" || bannerChoice === "2") {
+        // Limitado 1 e Limitado 2
         pityData = userdb.gacha.pity;
         const bannerAtualEscolhido = `${Furina.bannerAtual}-${bannerChoice}`;
+        console.log(bannerAtualEscolhido)
+        bannerFile = new AttachmentBuilder(`./Furina/img/banners/${bannerAtualEscolhido}.jpeg`);
+        bannerURL = `attachment://${bannerAtualEscolhido}.jpeg`;
+      } else {
+        pityData = userdb.gacha.pity;
+        const bannerAtualEscolhido = `${Furina.bannerAtual}-1`;
         bannerFile = new AttachmentBuilder(`./Furina/img/banners/${bannerAtualEscolhido}.jpeg`);
         bannerURL = `attachment://${bannerAtualEscolhido}.jpeg`;
       }

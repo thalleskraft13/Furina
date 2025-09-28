@@ -4,17 +4,17 @@
     "cluster": "Juíza das Marés",
     "cluster_id": 0,
     "status": "Online",
-    "ping": "41ms",
-    "memoria": "32.74MB / 64312.69MB",
+    "ping": "62ms",
+    "memoria": "31.39MB / 64312.69MB",
     "servidores": 0,
-    "usuarios": 2,
-    "canais": 1,
+    "usuarios": 1,
+    "canais": 0,
     "eventos": 5,
-    "uptime": "12.00 min",
+    "uptime": "4.00 min",
     "cpu": {
-      "user": 4888591,
-      "system": 776786,
-      "percent": "5.67%"
+      "user": 2210436,
+      "system": 328685,
+      "percent": "2.54%"
     },
     "versoes": {
       "node": "v22.17.0",
@@ -25,27 +25,27 @@
       "tipo": "Linux",
       "arquitetura": "x64",
       "plataforma": "linux",
-      "uptimeSegundos": 165073.71
+      "uptimeSegundos": 2321.33
     },
-    "iniciouEm": "2025-09-28T14:58:10.848Z",
-    "ultimoUpdate": "2025-09-28T14:58:10.848Z"
+    "iniciouEm": "2025-09-28T15:36:02.495Z",
+    "ultimoUpdate": "2025-09-28T15:36:02.495Z"
   },
   "1": {
     "shard": 1,
     "cluster": "Orquestra das Fontes",
     "cluster_id": 1,
     "status": "Online",
-    "ping": "44ms",
-    "memoria": "31.55MB / 64312.69MB",
+    "ping": "42ms",
+    "memoria": "36.46MB / 64312.69MB",
     "servidores": 3,
-    "usuarios": 9,
+    "usuarios": 3,
     "canais": 228,
     "eventos": 5,
-    "uptime": "11.00 min",
+    "uptime": "4.00 min",
     "cpu": {
-      "user": 6629132,
-      "system": 801016,
-      "percent": "7.43%"
+      "user": 2575458,
+      "system": 333382,
+      "percent": "2.91%"
     },
     "versoes": {
       "node": "v22.17.0",
@@ -56,9 +56,9 @@
       "tipo": "Linux",
       "arquitetura": "x64",
       "plataforma": "linux",
-      "uptimeSegundos": 165020.62
+      "uptimeSegundos": 2328.38
     },
-    "iniciouEm": "2025-09-28T14:57:17.762Z",
-    "ultimoUpdate": "2025-09-28T14:57:17.762Z"
+    "iniciouEm": "2025-09-28T15:36:09.549Z",
+    "ultimoUpdate": "2025-09-28T15:36:09.549Z"
   }
 }
