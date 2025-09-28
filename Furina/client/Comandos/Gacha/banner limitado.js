@@ -51,7 +51,6 @@ module.exports = {
       }
 
       const agora = Date.now();
-
       let serverDB = await Furina.serverdb.findOne({ serverId: interaction.guild.id });
       if (!serverDB) {
         let newserver = new Furina.serverdb({ serverId: interaction.guild.id });
@@ -84,16 +83,9 @@ module.exports = {
         pityData = userdb.gacha.arma;
         bannerFile = new AttachmentBuilder(`./Furina/img/banners/${Furina.bannerAtual}arma.jpeg`);
         bannerURL = `attachment://${Furina.bannerAtual}arma.jpeg`;
-      } else if (bannerChoice === "1" || bannerChoice === "2") {
-        // Limitado 1 e Limitado 2
-        pityData = userdb.gacha.pity;
-        const bannerAtualEscolhido = `${Furina.bannerAtual}-${bannerChoice}`;
-        console.log(bannerAtualEscolhido)
-        bannerFile = new AttachmentBuilder(`./Furina/img/banners/${bannerAtualEscolhido}.jpeg`);
-        bannerURL = `attachment://${bannerAtualEscolhido}.jpeg`;
       } else {
         pityData = userdb.gacha.pity;
-        const bannerAtualEscolhido = `${Furina.bannerAtual}-1`;
+        const bannerAtualEscolhido = `${Furina.bannerAtual}-${bannerChoice}`;
         bannerFile = new AttachmentBuilder(`./Furina/img/banners/${bannerAtualEscolhido}.jpeg`);
         bannerURL = `attachment://${bannerAtualEscolhido}.jpeg`;
       }
@@ -107,155 +99,38 @@ module.exports = {
         })
         .setColor("#3E91CC");
 
-      // Função completa de gerar imagem igual ao antigo
+      // Função que gera imagem
       async function gerarImagemBanner(resultado, qtde) {
-        const WIDTH = 1250;
-        const HEIGHT = 600;
+        const WIDTH = 1250, HEIGHT = 600;
         const canvas = createCanvas(WIDTH, HEIGHT);
         const ctx = canvas.getContext("2d");
-
-        const gradient = ctx.createRadialGradient(WIDTH / 2, HEIGHT / 2, HEIGHT * 0.1, WIDTH / 2, HEIGHT / 2, HEIGHT);
-        gradient.addColorStop(0, "#1e2251");
-        gradient.addColorStop(1, "#0d0f2c");
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-        const spacing = 8;
-        const maxTotalHeight = HEIGHT * 0.9;
-        const starAreaHeight = maxTotalHeight * 0.12;
-        const maxItemHeight = maxTotalHeight - starAreaHeight;
-
-        const itemHeight = maxItemHeight;
-        const itemWidth = itemHeight / 4;
-        const startY = (HEIGHT - maxTotalHeight) / 2 + starAreaHeight;
-
-        function getBorderColor(rarity) {
-          if (rarity === 5) return "#FFD700";
-          if (rarity === 4) return "#A86EF9";
-          return "#3B91FF";
-        }
-
-        function getStarColor(rarity) {
-          if (rarity === 5) return "#FFD700";
-          if (rarity === 4) return "#A86EF9";
-          return "#88BBFF";
-        }
-
-        function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
-          let rot = Math.PI / 2 * 3;
-          const step = Math.PI / spikes;
-          ctx.beginPath();
-          ctx.moveTo(cx, cy - outerRadius);
-          for (let i = 0; i < spikes; i++) {
-            ctx.lineTo(cx + Math.cos(rot) * outerRadius, cy + Math.sin(rot) * outerRadius);
-            rot += step;
-            ctx.lineTo(cx + Math.cos(rot) * innerRadius, cy + Math.sin(rot) * innerRadius);
-            rot += step;
-          }
-          ctx.closePath();
-        }
-
-        function drawStars(x, y, rarity, itemWidth) {
-          const starSizeOuter = itemWidth * 0.1;
-          const starSizeInner = starSizeOuter * 0.5;
-          const spacing = starSizeOuter * 2;
-          const totalWidth = spacing * rarity;
-          const startX = x + (itemWidth - totalWidth) / 2 + starSizeOuter;
-          for (let i = 0; i < rarity; i++) {
-            const cx = startX + i * spacing;
-            const cy = y;
-            ctx.save();
-            ctx.shadowColor = "rgba(255, 255, 255, 0.7)";
-            ctx.shadowBlur = starSizeOuter * 0.8;
-            ctx.fillStyle = getStarColor(rarity);
-            drawStar(ctx, cx, cy, 5, starSizeOuter, starSizeInner);
-            ctx.fill();
-            ctx.shadowColor = "transparent";
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.restore();
-          }
-        }
-
-        function drawDecorativeBorder(ctx, x, y, width, height, rarity) {
-          const spikeDepth = width * 0.07;
-          const radius = width * 0.2;
-          ctx.lineWidth = Math.max(2, width * 0.05);
-          ctx.strokeStyle = getBorderColor(rarity);
-          ctx.shadowColor = ctx.strokeStyle;
-          ctx.shadowBlur = width * 0.1;
-          ctx.beginPath();
-          ctx.moveTo(x + radius, y);
-          const midTopX = x + width / 2;
-          ctx.lineTo(midTopX - spikeDepth, y);
-          ctx.quadraticCurveTo(midTopX, y - spikeDepth * 1.5, midTopX + spikeDepth, y);
-          ctx.lineTo(x + width - radius, y);
-          ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-          const midRightY = y + height / 2;
-          ctx.lineTo(x + width, midRightY - spikeDepth);
-          ctx.quadraticCurveTo(x + width + spikeDepth * 1.5, midRightY, x + width, midRightY + spikeDepth);
-          ctx.lineTo(x + width, y + height - radius);
-          ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-          const midBottomX = x + width / 2;
-          ctx.lineTo(midBottomX + spikeDepth, y + height);
-          ctx.quadraticCurveTo(midBottomX, y + height + spikeDepth * 1.5, midBottomX - spikeDepth, y + height);
-          ctx.lineTo(x + radius, y + height);
-          ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-          const midLeftY = y + height / 2;
-          ctx.lineTo(x, midLeftY + spikeDepth);
-          ctx.quadraticCurveTo(x - spikeDepth * 1.5, midLeftY, x, midLeftY - spikeDepth);
-          ctx.lineTo(x, y + radius);
-          ctx.quadraticCurveTo(x, y, x + radius, y);
-          ctx.closePath();
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-        }
+        ctx.fillStyle = "#111"; ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
         const baseDir = path.join(process.cwd(), "Furina", "img", "banners");
-
-        async function loadItemImage(p) {
-          let basePath = "";
-          if (qtde === 10) {
-            if (p.type === "Personagem") basePath = path.join(baseDir, "personagens", "10tiro");
-            else basePath = path.join(baseDir, "armas");
-          } else {
-            if (p.type === "Personagem") basePath = path.join(baseDir, "personagens");
-            else basePath = path.join(baseDir, "armas");
-          }
-          if (p.nome === "Scaramouche") return loadImage(path.join(basePath, "Scaramouche.png"));
-          return loadImage(path.join(basePath, `${p.nome}.png`));
-        }
-
-        const ordenado = [...resultado].sort((a, b) => {
-          if (a.type === b.type) return 0;
-          return a.type === "Personagem" ? -1 : 1;
-        });
-
         const images = [];
-        for (const p of ordenado) {
-          try { images.push(await loadItemImage(p)); } 
-          catch { images.push(null); }
+        for (const p of resultado) {
+          try {
+            let imgPath = path.join(baseDir, p.type === "Arma" ? "armas" : "personagens", `${p.nome}.png`);
+            images.push(await loadImage(imgPath));
+          } catch {
+            images.push(null);
+          }
         }
-
-        for (let i = 0; i < ordenado.length; i++) {
-          const p = ordenado[i];
+        for (let i = 0; i < resultado.length; i++) {
+          const p = resultado[i];
           const img = images[i];
-          const x = i * (itemWidth + spacing);
-          const y = startY;
-          drawDecorativeBorder(ctx, x, y, itemWidth, itemHeight, p.raridade);
-          if (img) ctx.drawImage(img, x + itemWidth * 0.05, y + itemHeight * 0.05, itemWidth * 0.9, itemHeight * 0.9);
-          drawStars(x, y - starAreaHeight * 0.7, p.raridade, itemWidth);
+          if (img) ctx.drawImage(img, i * 120, 100, 100, 100);
+          ctx.fillStyle = "#fff";
+          ctx.fillText(`${p.nome} (${p.raridade}★)`, i * 120, 230);
         }
-
-        return canvas.toBuffer();
+        return canvas.toBuffer("image/jpeg", { quality: 0.8 });
       }
 
-      // Botões 1 e 10 tiros
+      // Botão de 1 tiro
       const btnId1 = Furina.CustomCollector.create(async (btnInt) => {
         await btnInt.deferUpdate();
-        if (btnInt.user.id !== interaction.user.id) return btnInt.followUp({ content: "❌ Apenas quem executou o comando pode usar estes botões.", ephemeral: true });
-        if (userdb.primogemas < 160) return btnInt.followUp({ content: "Uma única invocação custa 160 primogemas.", ephemeral: true });
+        if (btnInt.user.id !== interaction.user.id) return;
+        if (userdb.primogemas < 160) return;
 
         const resultado = await Furina.Banner.push(pityData, interaction.user.id, 1, bannerChoice, interaction.guild.id);
         const res = resultado[0];
@@ -264,23 +139,30 @@ module.exports = {
         await btnInt.editReply({ embeds: [new EmbedBuilder().setImage(gifUrl)], components: [], files: [] });
 
         setTimeout(async () => {
+          // envia a imagem no canal e pega a URL
+          let url = null;
+          if (res.raridade >= 4) {
+            const file = new AttachmentBuilder(`./Furina/img/banners/${res.type === "Arma" ? "armas" : "personagens"}/${res.nome}.png`);
+            const msg = await interaction.channel.send({ files: [file] });
+            url = msg.attachments.first().url;
+          }
+
           const embed = new EmbedBuilder()
             .setTitle("**A sorte lança seus dados!**")
             .setDescription(`Você obteve: **${res.nome}** (${res.type}) - ${res.raridade}★`)
-            .setColor(res.raridade === 5 ? "#D9B468" : res.raridade === 4 ? "#8A75D1" : "#A0A0A0")
-            .setImage(res.raridade < 4 ? null : `attachment://${res.nome}.png`);
+            .setColor(res.raridade === 5 ? "#D9B468" : res.raridade === 4 ? "#8A75D1" : "#A0A0A0");
 
-          await btnInt.editReply({
-            embeds: [embed],
-            files: res.raridade < 4 ? [] : [new AttachmentBuilder(`./Furina/img/banners/${res.type === "Arma" ? "armas" : "personagens"}/${res.nome}.png`)]
-          });
+          if (url) embed.setImage(url);
+
+          await btnInt.editReply({ embeds: [embed], files: [] });
         }, 5000);
       }, { type: "button", checkAuthor: true, authorId: interaction.user.id, timeout: 60000 });
 
+      // Botão de 10 tiros
       const btnId10 = Furina.CustomCollector.create(async (btnInt) => {
         await btnInt.deferUpdate();
-        if (btnInt.user.id !== interaction.user.id) return btnInt.followUp({ content: "❌ Apenas quem executou o comando pode usar estes botões.", ephemeral: true });
-        if (userdb.primogemas < 1600) return btnInt.followUp({ content: "10 invocações custam 1600 primogemas.", ephemeral: true });
+        if (btnInt.user.id !== interaction.user.id) return;
+        if (userdb.primogemas < 1600) return;
 
         const resultado = await Furina.Banner.push(pityData, interaction.user.id, 10, bannerChoice, interaction.guild.id);
         const t5 = resultado.some(p => p.raridade === 5);
@@ -290,16 +172,17 @@ module.exports = {
 
         setTimeout(async () => {
           const buffer = await gerarImagemBanner(resultado, 10);
-          const attachment = new AttachmentBuilder(buffer, { name: "resultado_10tiros.png" });
+          const msg = await interaction.channel.send({ files: [new AttachmentBuilder(buffer, { name: "resultado.jpg" })] });
+          const url = msg.attachments.first().url;
+
           await btnInt.editReply({
             content: `${interaction.user}`,
             embeds: [new EmbedBuilder()
               .setTitle("**Resultado dos 10 desejos!**")
               .setDescription(resultado.map(p => `**${p.nome}** (${p.type}) - ${p.raridade}★`).join("\n"))
               .setColor("#D9B468")
-              .setImage("attachment://resultado_10tiros.png")
-            ],
-            files: [attachment]
+              .setImage(url)
+            ]
           });
         }, 7000);
       }, { type: "button", checkAuthor: true, authorId: interaction.user.id, timeout: 60000 });
@@ -316,18 +199,10 @@ module.exports = {
         components: [row]
       });
 
-      if (bannerChoice === "regional"){
-        return await interaction.followUp({
-          content: "Na proxima versão,  todos os seus personagens pegos do banner regional irão ganhar suas assinaturas.",
-          ephemeral: true
-        })
-      }
-
     } catch (err) {
       console.error(err);
-      const id = Furina.reportarErro({ erro: err, comando: interaction.commandName, servidor: interaction.guild });
       return interaction.editReply({
-        content: `❌ Um erro ocorreu! ID: \`${id}\``,
+        content: `❌ Um erro ocorreu!`,
         components: [{ type: 1, components: [{ type: 2, label: "Servidor de Suporte", style: 5, url: "https://discord.gg/KQg2B5JeBh" }] }],
         embeds: [],
         files: []
