@@ -62,31 +62,40 @@ module.exports = {
       if (isUserPremium) pity = 60;
       else if (isServerPremium && mareDourada.diminuiPity) pity = 75;
 
+      // Escolha do banner
       let pityData;
       let bannerFile;
+      let bannerURL;
+
       if (bannerChoice === "mochileiro") {
         pityData = userdb.gacha.pityMochileiro;
-        bannerFile = `./Furina/img/banners/Mochileiro.jpeg`;
+        bannerFile = new AttachmentBuilder(`./Furina/img/banners/Mochileiro.jpeg`);
+        bannerURL = "attachment://Mochileiro.jpeg";
       } else if (bannerChoice === "regional") {
         pityData = userdb.gacha.regional;
-        bannerFile = `./Furina/img/banners/RegionalInazuma.jpeg`;
+        bannerFile = new AttachmentBuilder(`./Furina/img/banners/RegionalInazuma.jpeg`);
+        bannerURL = "attachment://RegionalInazuma.jpeg";
       } else if (bannerChoice === "armas") {
         pityData = userdb.gacha.arma;
-        bannerFile = `./Furina/img/banners/${Furina.bannerAtual}arma.jpeg`;
+        bannerFile = new AttachmentBuilder(`./Furina/img/banners/${Furina.bannerAtual}arma.jpeg`);
+        bannerURL = `attachment://${Furina.bannerAtual}arma.jpeg`;
       } else {
         pityData = userdb.gacha.pity;
-        const bannerAtualEscolhido = `${Furina.bannerAtual}-${bannerChoice === "1" || bannerChoice === "2" ? bannerChoice : "1"}`;
-        bannerFile = `./Furina/img/banners/${bannerAtualEscolhido}.jpeg`;
+        const bannerAtualEscolhido = `${Furina.bannerAtual}-${bannerChoice}`;
+        bannerFile = new AttachmentBuilder(`./Furina/img/banners/${bannerAtualEscolhido}.jpeg`);
+        bannerURL = `attachment://${bannerAtualEscolhido}.jpeg`;
       }
 
+      // Embed inicial do banner
       const embed = new EmbedBuilder()
         .setTitle("**O palco estrelado desta temporada!**")
-        .setImage(`attachment://${bannerFile.split("/").pop()}`)
+        .setImage(bannerURL)
         .setFooter({
           text: `Pity: ${pityData.five}/${pity} | Garantia: ${pityData.garantia5 ? "Sim" : "Não"}`
         })
         .setColor("#3E91CC");
 
+      // Botões 1 e 10 tiros
       const btnId1 = Furina.CustomCollector.create(async (btnInt) => {
         await btnInt.deferUpdate();
         if (btnInt.user.id !== interaction.user.id) return btnInt.followUp({ content: "❌ Apenas quem executou o comando pode usar estes botões.", ephemeral: true });
@@ -96,18 +105,13 @@ module.exports = {
         const res = resultado[0];
         const gifUrl = gifs[`1tiro-t${res.raridade}`];
 
-        await btnInt.editReply({ embeds: [new EmbedBuilder().setImage(gifUrl)], components: [], files: [] });
+        const embedResult = new EmbedBuilder()
+          .setTitle("**A sorte lança seus dados!**")
+          .setDescription(`Você obteve: **${res.nome}** (${res.type}) - ${res.raridade}★`)
+          .setImage(gifUrl)
+          .setColor(res.raridade === 5 ? "#D9B468" : res.raridade === 4 ? "#8A75D1" : "#A0A0A0");
 
-        setTimeout(async () => {
-          const attachment = res.raridade >= 4 ? [new AttachmentBuilder(`./Furina/img/banners/${res.type === "Arma" ? "armas" : "personagens"}/${res.nome}.png`)] : [];
-          const embedResult = new EmbedBuilder()
-            .setTitle("**A sorte lança seus dados!**")
-            .setDescription(`Você obteve: **${res.nome}** (${res.type}) - ${res.raridade}★`)
-            .setColor(res.raridade === 5 ? "#D9B468" : res.raridade === 4 ? "#8A75D1" : "#A0A0A0")
-            .setImage(res.raridade >= 4 ? `attachment://${res[0]?.nome}.png` : null);
-
-          await btnInt.editReply({ embeds: [embedResult], files: attachment, components: [] });
-        }, 5000);
+        await btnInt.editReply({ embeds: [embedResult], components: [] });
       }, { type: "button", checkAuthor: true, authorId: interaction.user.id, timeout: 60000 });
 
       const btnId10 = Furina.CustomCollector.create(async (btnInt) => {
@@ -119,19 +123,13 @@ module.exports = {
         const t5 = resultado.some(p => p.raridade === 5);
         const gifUrl = t5 ? gifs["10tiro-t5"] : gifs["10tiro-t4"];
 
-        const attachments = resultado.filter(p => p.raridade >= 4)
-          .map(p => new AttachmentBuilder(`./Furina/img/banners/${p.type === "Arma" ? "armas" : "personagens"}/${p.nome}.png`));
-
         const embedResult = new EmbedBuilder()
           .setTitle("**Resultado dos 10 desejos!**")
           .setDescription(resultado.map(p => `**${p.nome}** (${p.type}) - ${p.raridade}★`).join("\n"))
-          .setColor("#D9B468")
-          .setImage(attachments[0] ? `attachment://${attachments[0].name}` : null);
+          .setImage(gifUrl)
+          .setColor("#D9B468");
 
-        await btnInt.editReply({ embeds: [new EmbedBuilder().setImage(gifUrl)], components: [], files: [] });
-        setTimeout(async () => {
-          await btnInt.editReply({ embeds: [embedResult], files: attachments, components: [] });
-        }, 5000);
+        await btnInt.editReply({ embeds: [embedResult], components: [] });
       }, { type: "button", checkAuthor: true, authorId: interaction.user.id, timeout: 60000 });
 
       const row = new ActionRowBuilder().addComponents(
@@ -142,7 +140,7 @@ module.exports = {
       await interaction.editReply({
         content: `${interaction.user}`,
         embeds: [embed],
-        files: [new AttachmentBuilder(bannerFile)],
+        files: [bannerFile],
         components: [row]
       });
 
@@ -150,7 +148,7 @@ module.exports = {
         return await interaction.followUp({
           content: "Na próxima versão, todos os seus personagens pegos do banner regional irão ganhar suas assinaturas.",
           ephemeral: true
-        })
+        });
       }
 
     } catch (err) {
