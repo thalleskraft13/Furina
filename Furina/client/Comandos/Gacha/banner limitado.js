@@ -98,38 +98,64 @@ module.exports = {
       // Botões 1 e 10 tiros
       const btnId1 = Furina.CustomCollector.create(async (btnInt) => {
         await btnInt.deferUpdate();
-        if (btnInt.user.id !== interaction.user.id) return btnInt.followUp({ content: "❌ Apenas quem executou o comando pode usar estes botões.", ephemeral: true });
-        if (userdb.primogemas < 160) return btnInt.followUp({ content: "Uma única invocação custa 160 primogemas.", ephemeral: true });
+        if (btnInt.user.id !== interaction.user.id)
+          return btnInt.followUp({ content: "❌ Apenas quem executou o comando pode usar estes botões.", ephemeral: true });
+        if (userdb.primogemas < 160)
+          return btnInt.followUp({ content: "Uma única invocação custa 160 primogemas.", ephemeral: true });
 
         const resultado = await Furina.Banner.push(pityData, interaction.user.id, 1, bannerChoice, interaction.guild.id);
         const res = resultado[0];
         const gifUrl = gifs[`1tiro-t${res.raridade}`];
 
-        const embedResult = new EmbedBuilder()
+        // Exibe o GIF de animação (removendo a imagem do banner)
+        const embedGif = new EmbedBuilder()
           .setTitle("**A sorte lança seus dados!**")
-          .setDescription(`Você obteve: **${res.nome}** (${res.type}) - ${res.raridade}★`)
           .setImage(gifUrl)
           .setColor(res.raridade === 5 ? "#D9B468" : res.raridade === 4 ? "#8A75D1" : "#A0A0A0");
 
-        await btnInt.editReply({ embeds: [embedResult], components: [] });
+        await btnInt.editReply({ embeds: [embedGif], components: [] });
+
+        // Após a animação, exibe o resultado
+        setTimeout(async () => {
+          const embedResult = new EmbedBuilder()
+            .setTitle("**Resultado do desejo!**")
+            .setDescription(`Você obteve: **${res.nome}** (${res.type}) - ${res.raridade}★`)
+            .setColor(res.raridade === 5 ? "#D9B468" : res.raridade === 4 ? "#8A75D1" : "#A0A0A0")
+            .setImage(gifUrl); // Pode manter o GIF aqui ou remover, se quiser apenas texto
+
+          await btnInt.editReply({ embeds: [embedResult], components: [] });
+        }, 5000); // Tempo da animação
       }, { type: "button", checkAuthor: true, authorId: interaction.user.id, timeout: 60000 });
 
       const btnId10 = Furina.CustomCollector.create(async (btnInt) => {
         await btnInt.deferUpdate();
-        if (btnInt.user.id !== interaction.user.id) return btnInt.followUp({ content: "❌ Apenas quem executou o comando pode usar estes botões.", ephemeral: true });
-        if (userdb.primogemas < 1600) return btnInt.followUp({ content: "10 invocações custam 1600 primogemas.", ephemeral: true });
+        if (btnInt.user.id !== interaction.user.id)
+          return btnInt.followUp({ content: "❌ Apenas quem executou o comando pode usar estes botões.", ephemeral: true });
+        if (userdb.primogemas < 1600)
+          return btnInt.followUp({ content: "10 invocações custam 1600 primogemas.", ephemeral: true });
 
         const resultado = await Furina.Banner.push(pityData, interaction.user.id, 10, bannerChoice, interaction.guild.id);
         const t5 = resultado.some(p => p.raridade === 5);
         const gifUrl = t5 ? gifs["10tiro-t5"] : gifs["10tiro-t4"];
 
-        const embedResult = new EmbedBuilder()
+        // Exibe o GIF de animação (removendo a imagem do banner)
+        const embedGif = new EmbedBuilder()
           .setTitle("**Resultado dos 10 desejos!**")
-          .setDescription(resultado.map(p => `**${p.nome}** (${p.type}) - ${p.raridade}★`).join("\n"))
           .setImage(gifUrl)
           .setColor("#D9B468");
 
-        await btnInt.editReply({ embeds: [embedResult], components: [] });
+        await btnInt.editReply({ embeds: [embedGif], components: [] });
+
+        // Após a animação, exibe o resultado final
+        setTimeout(async () => {
+          const embedResult = new EmbedBuilder()
+            .setTitle("**Resultado dos 10 desejos!**")
+            .setDescription(resultado.map(p => `**${p.nome}** (${p.type}) - ${p.raridade}★`).join("\n"))
+            .setColor("#D9B468")
+            .setImage(gifUrl); // Pode manter GIF ou remover
+
+          await btnInt.editReply({ embeds: [embedResult], components: [] });
+        }, 7000);
       }, { type: "button", checkAuthor: true, authorId: interaction.user.id, timeout: 60000 });
 
       const row = new ActionRowBuilder().addComponents(
