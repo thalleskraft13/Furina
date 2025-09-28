@@ -6,7 +6,7 @@ const { Routes } = require('discord-api-types/v10');
 const { REST } = require('@discordjs/rest');
 
 const TOKEN = process.env.token;
-const CLIENT_ID = "1385407052901515265";
+const CLIENT_ID = "1314904179680219136";
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 

@@ -5,12 +5,12 @@ class Banner {
     this.client = client;
 
     // Personagens
-    this.t5 = personagens.t5; // limitados
+    this.t5 = personagens.t5; 
     this.t5_arma = personagens.t5_arma;
     this.t4 = personagens.t4;
     this.t5_mochileiro = personagens.t5_mochileiro;
     this.t4_mochileiro = personagens.t4_mochileiro;
-    this.regional = personagens.regional.personagens; // todos 5★
+    this.regional = personagens.regional.personagens;
 
     // Elementos
     this.personagensElementos = {};
@@ -104,9 +104,11 @@ class Banner {
         } else if (bannerId === "armas") {
           got = this.armas.t5[Math.floor(Math.random() * this.armas.t5.length)];
         } else {
-          got = pity.garantia5 || Math.random() < 0.5
-            ? this.t5[0]
-            : this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)];
+          // Banner 1 ou 2
+          const bannerIndex = bannerId === "1" ? 0 : 1;
+          got = Math.random() < 0.5
+            ? this.t5[bannerIndex] // apenas o 5★ do banner
+            : this.t5_mochileiro[Math.floor(Math.random() * this.t5_mochileiro.length)]; // ou mochileiro
         }
 
         pity.garantia5 = !pity.garantia5;
@@ -147,7 +149,7 @@ class Banner {
       resultado.push({ type: "Arma", raridade, nome: got, id: this.armasMap[got] });
     }
 
-    // Atualiza no banco
+    // Atualiza usuário
     for (const { type, nome, raridade } of resultado) {
       if (type === "Personagem") {
         const index = userdb.personagens.findIndex(p => p.nome === nome);

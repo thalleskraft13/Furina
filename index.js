@@ -1,6 +1,7 @@
 const chalk = require("chalk");
 const FurinaApplication = require("./Furina/furinaDoDiscord");
 const FurinaHelper = require("./FurinaHelper/bot");
+const Neuvilette = require("./Neuvilette/bot")
 const connectMongo = require("./Furina/client/mongodb/connectMongo");
 
 (async () => {
@@ -16,8 +17,14 @@ const connectMongo = require("./Furina/client/mongodb/connectMongo");
 
     // Helper
     const Helper = new FurinaHelper();
-    await Helper.start();
-    console.log(chalk.cyanBright("✅ Furina Helper iniciado com sucesso!"));
+   // await Helper.start();
+  console.log(chalk.cyanBright("✅ Furina Helper iniciado com sucesso!"));
+
+    console.log(chalk.magentaBright("\n——————————————————————————————————————————————\n"));
+
+    const NeuviletteBot = new Neuvilette();
+    await NeuviletteBot.start();
+    console.log(chalk.cyanBright("✅ Neuvilette iniciado com sucesso!"));
 
     console.log(chalk.yellowBright("\n🌟 Ambos os bots estão online e prontos!\n"));
   } catch (err) {
