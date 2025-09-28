@@ -113,7 +113,7 @@ module.exports = {
           .setImage(gifUrl)
           .setColor(res.raridade === 5 ? "#D9B468" : res.raridade === 4 ? "#8A75D1" : "#A0A0A0");
 
-        await btnInt.editReply({ embeds: [embedGif], components: [] });
+        await btnInt.editReply({ embeds: [embedGif], components: [], files: [] });
 
         // Após a animação, exibe o resultado
         setTimeout(async () => {
@@ -123,7 +123,7 @@ module.exports = {
             .setColor(res.raridade === 5 ? "#D9B468" : res.raridade === 4 ? "#8A75D1" : "#A0A0A0")
             .setImage(gifUrl); // Pode manter o GIF aqui ou remover, se quiser apenas texto
 
-          await btnInt.editReply({ embeds: [embedResult], components: [] });
+          await btnInt.editReply({ embeds: [embedResult], components: [], files: [] });
         }, 5000); // Tempo da animação
       }, { type: "button", checkAuthor: true, authorId: interaction.user.id, timeout: 60000 });
 
@@ -144,7 +144,7 @@ module.exports = {
           .setImage(gifUrl)
           .setColor("#D9B468");
 
-        await btnInt.editReply({ embeds: [embedGif], components: [] });
+        await btnInt.editReply({ embeds: [embedGif], components: [], files: []});
 
         // Após a animação, exibe o resultado final
         setTimeout(async () => {
@@ -152,9 +152,9 @@ module.exports = {
             .setTitle("**Resultado dos 10 desejos!**")
             .setDescription(resultado.map(p => `**${p.nome}** (${p.type}) - ${p.raridade}★`).join("\n"))
             .setColor("#D9B468")
-            .setImage(gifUrl); // Pode manter GIF ou remover
+          
 
-          await btnInt.editReply({ embeds: [embedResult], components: [] });
+          await btnInt.editReply({ embeds: [embedResult], components: [], files: []});
         }, 7000);
       }, { type: "button", checkAuthor: true, authorId: interaction.user.id, timeout: 60000 });
 
